@@ -6,6 +6,8 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Eye,
+  EyeOff,
   Flag,
   XCircle,
 } from "lucide-react"
@@ -31,6 +33,7 @@ export interface SessionRunnerProps {
 }
 
 type AnswerMap = Record<string, ChoiceId | undefined>
+type PracticeFeedbackMode = "instant" | "deferred"
 
 const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label])
@@ -45,9 +48,11 @@ export function SessionRunner({
 }: SessionRunnerProps) {
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<AnswerMap>({})
-  const [locked, setLocked] = useState<Record<string, true | undefined>>({})
+  const [revealed, setRevealed] = useState<Record<string, true | undefined>>({})
   const [flagged, setFlagged] = useState<Set<string>>(() => new Set())
   const [submitted, setSubmitted] = useState(false)
+  const [feedbackMode, setFeedbackMode] =
+    useState<PracticeFeedbackMode>("instant")
 
   const total = questions.length
   const current = questions[index]
@@ -83,14 +88,24 @@ export function SessionRunner({
   const selectChoice = useCallback(
     (choiceId: ChoiceId) => {
       if (!current || isFinished) return
-      if (mode === "practice" && locked[current.id]) return
+      if (mode === "practice" && revealed[current.id]) return
       setAnswers((prev) => ({ ...prev, [current.id]: choiceId }))
-      if (mode === "practice") {
-        setLocked((prev) => ({ ...prev, [current.id]: true }))
+      if (mode === "practice" && feedbackMode === "instant") {
+        setRevealed((prev) => ({ ...prev, [current.id]: true }))
       }
     },
-    [current, isFinished, mode, locked]
+    [current, isFinished, mode, revealed, feedbackMode]
   )
+
+  const revealCurrent = useCallback(() => {
+    if (!current || mode !== "practice") return
+    if (answers[current.id] == null) return
+    setRevealed((prev) => ({ ...prev, [current.id]: true }))
+  }, [current, mode, answers])
+
+  const toggleFeedbackMode = useCallback(() => {
+    setFeedbackMode((prev) => (prev === "instant" ? "deferred" : "instant"))
+  }, [])
 
   const goPrev = useCallback(() => {
     setIndex((i) => Math.max(0, i - 1))
@@ -135,10 +150,11 @@ export function SessionRunner({
       else if (key === "arrowleft" || key === "[") goPrev()
       else if (key === "arrowright" || key === "]" || key === "enter") goNext()
       else if (key === "f") toggleFlag()
+      else if (key === "r") revealCurrent()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [selectChoice, goPrev, goNext, toggleFlag, isFinished])
+  }, [selectChoice, goPrev, goNext, toggleFlag, revealCurrent, isFinished])
 
   if (isFinished) {
     return (
@@ -156,10 +172,15 @@ export function SessionRunner({
   if (!current) return null
 
   const chosen = answers[current.id]
-  const isLocked = mode === "practice" && locked[current.id] === true
+  const isRevealed = mode === "practice" && revealed[current.id] === true
   const isCorrect = chosen != null && chosen === current.answerId
   const isFlagged = flagged.has(current.id)
   const progressPct = ((index + 1) / total) * 100
+  const canReveal =
+    mode === "practice" &&
+    feedbackMode === "deferred" &&
+    chosen != null &&
+    !isRevealed
 
   const canSubmit = mode === "exam"
   const lowTime = msRemaining !== null && msRemaining < 60_000
@@ -216,8 +237,50 @@ export function SessionRunner({
         </div>
       </div>
 
+      <div className="mx-auto w-full max-w-3xl px-4 pt-3 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            size="xs"
+            variant={isFlagged ? "default" : "outline"}
+            onClick={toggleFlag}
+            aria-pressed={isFlagged}
+            title={isFlagged ? "Unflag question" : "Flag for review"}
+          >
+            <Flag
+              data-icon="inline-start"
+              aria-hidden
+              className={isFlagged ? "fill-current" : ""}
+            />
+            {isFlagged ? "Flagged" : "Flag"}
+          </Button>
+
+          {mode === "practice" && (
+            <Button
+              type="button"
+              size="xs"
+              variant={feedbackMode === "instant" ? "default" : "outline"}
+              onClick={toggleFeedbackMode}
+              aria-pressed={feedbackMode === "instant"}
+              title={
+                feedbackMode === "instant"
+                  ? "Feedback shows on answer (press to defer)"
+                  : "Reveal answer on demand (press to auto-reveal)"
+              }
+            >
+              {feedbackMode === "instant" ? (
+                <Eye data-icon="inline-start" aria-hidden />
+              ) : (
+                <EyeOff data-icon="inline-start" aria-hidden />
+              )}
+              Feedback: {feedbackMode === "instant" ? "Instant" : "On reveal"}
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Question body */}
-      <div className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-32 sm:px-6">
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 pt-5 pb-32 sm:px-6">
         <div className="mb-3 flex items-center gap-2">
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {TOPIC_LABEL[current.topic] ?? current.topic}
@@ -235,22 +298,22 @@ export function SessionRunner({
           {current.choices.map((choice) => {
             const isChosen = chosen === choice.id
             const isAnswer = current.answerId === choice.id
-            const showAsCorrect = isLocked && isAnswer
-            const showAsWrong = isLocked && isChosen && !isAnswer
+            const showAsCorrect = isRevealed && isAnswer
+            const showAsWrong = isRevealed && isChosen && !isAnswer
 
             return (
               <li key={choice.id}>
                 <button
                   type="button"
                   onClick={() => selectChoice(choice.id)}
-                  disabled={isLocked}
+                  disabled={isRevealed}
                   aria-pressed={isChosen}
                   className={cn(
                     "group flex w-full items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors",
                     "hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-card",
                     "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
                     isChosen &&
-                      !isLocked &&
+                      !isRevealed &&
                       "border-foreground/60 bg-accent/40",
                     showAsCorrect &&
                       "border-emerald-500/60 bg-emerald-500/10 text-foreground",
@@ -262,7 +325,7 @@ export function SessionRunner({
                     className={cn(
                       "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border font-mono text-xs uppercase",
                       isChosen &&
-                        !isLocked &&
+                        !isRevealed &&
                         "border-foreground bg-foreground text-background",
                       showAsCorrect &&
                         "border-emerald-500 bg-emerald-500 text-white",
@@ -295,7 +358,20 @@ export function SessionRunner({
           })}
         </ul>
 
-        {isLocked && (
+        {canReveal && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-card/50 px-4 py-3">
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              Commit when you&apos;re ready — reveal the correct choice and
+              explanation. You can still change your pick until you reveal.
+            </p>
+            <Button type="button" size="sm" onClick={revealCurrent}>
+              <Eye data-icon="inline-start" aria-hidden />
+              Reveal answer
+            </Button>
+          </div>
+        )}
+
+        {isRevealed && (
           <div
             className={cn(
               "mt-6 rounded-lg border p-4",
@@ -346,24 +422,7 @@ export function SessionRunner({
             <span className="hidden sm:inline">Prev</span>
           </Button>
 
-          <Button
-            variant={isFlagged ? "default" : "ghost"}
-            size="sm"
-            onClick={toggleFlag}
-            type="button"
-            aria-pressed={isFlagged}
-          >
-            <Flag
-              data-icon="inline-start"
-              aria-hidden
-              className={isFlagged ? "fill-current" : ""}
-            />
-            <span className="hidden sm:inline">
-              {isFlagged ? "Flagged" : "Flag"}
-            </span>
-          </Button>
-
-          <span className="mx-auto hidden font-mono text-[11px] text-muted-foreground tabular-nums sm:inline">
+          <span className="mx-auto font-mono text-[11px] text-muted-foreground tabular-nums">
             {answeredCount}/{total} answered
           </span>
 
