@@ -1,21 +1,23 @@
 "use client"
 
 import Link from "next/link"
-import { CheckCircle2, Flag, RotateCcw, XCircle } from "lucide-react"
+import { CheckCircle2, Flag, XCircle } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import type { ChoiceId, Question } from "@/lib/questions"
-
-import type { SessionMode } from "./session-runner"
 
 const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label])
 ) as Record<TopicId, string>
 
 interface SessionResultsProps {
-  mode: SessionMode
   modeLabel: string
   questions: readonly Question[]
   answers: Record<string, ChoiceId | undefined>
@@ -24,7 +26,6 @@ interface SessionResultsProps {
 }
 
 export function SessionResults({
-  mode,
   modeLabel,
   questions,
   answers,
@@ -164,16 +165,17 @@ export function SessionResults({
             {total} questions
           </span>
         </div>
-        <ol className="space-y-2" role="list">
+        <Accordion type="multiple" className="space-y-2">
           {questions.map((q, i) => {
             const chosen = answers[q.id]
             const ok = chosen === q.answerId
             const skipped = chosen == null
+            const isFlagged = flagged.has(q.id)
             return (
-              <li
+              <AccordionItem
                 key={q.id}
+                value={q.id}
                 className={cn(
-                  "rounded-lg border bg-card",
                   ok
                     ? "border-emerald-500/30"
                     : skipped
@@ -181,86 +183,132 @@ export function SessionResults({
                       : "border-destructive/30"
                 )}
               >
-                <div className="flex items-start gap-3 px-4 py-3">
+                <AccordionTrigger>
                   <span className="mt-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-snug">{q.prompt}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {TOPIC_LABEL[q.topic] ?? q.topic}
-                      {flagged.has(q.id) && (
-                        <>
-                          <span className="mx-1.5 text-muted-foreground/50">
-                            ·
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                            <Flag className="size-3" aria-hidden />
-                            Flagged
-                          </span>
-                        </>
-                      )}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                      <span className="text-muted-foreground">
-                        Your answer:{" "}
-                        <span
-                          className={cn(
-                            "font-mono uppercase",
-                            skipped
-                              ? "text-muted-foreground"
-                              : ok
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-destructive"
-                          )}
-                        >
-                          {chosen ?? "—"}
-                        </span>
+                  <span className="flex min-w-0 flex-1 items-start gap-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm leading-snug">
+                        {q.prompt}
                       </span>
-                      <span className="text-muted-foreground">
-                        Correct:{" "}
-                        <span className="font-mono text-foreground uppercase">
-                          {q.answerId}
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                        <span>{TOPIC_LABEL[q.topic] ?? q.topic}</span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span>
+                          You:{" "}
+                          <span
+                            className={cn(
+                              "font-mono uppercase",
+                              skipped
+                                ? "text-muted-foreground"
+                                : ok
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-destructive"
+                            )}
+                          >
+                            {chosen ?? "—"}
+                          </span>
                         </span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span>
+                          Correct:{" "}
+                          <span className="font-mono text-foreground uppercase">
+                            {q.answerId}
+                          </span>
+                        </span>
+                        {isFlagged && (
+                          <>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                              <Flag className="size-3" aria-hidden />
+                              Flagged
+                            </span>
+                          </>
+                        )}
                       </span>
-                    </div>
-                    {!ok && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {q.explanation}
-                      </p>
-                    )}
-                  </div>
+                    </span>
+                  </span>
                   {ok ? (
                     <CheckCircle2
                       className="size-4 shrink-0 text-emerald-500"
                       aria-hidden
                     />
-                  ) : skipped ? null : (
+                  ) : skipped ? (
+                    <span
+                      className="size-4 shrink-0 rounded-full border border-muted-foreground/30"
+                      aria-hidden
+                    />
+                  ) : (
                     <XCircle
                       className="size-4 shrink-0 text-destructive"
                       aria-hidden
                     />
                   )}
-                </div>
-              </li>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-sm leading-snug">{q.prompt}</p>
+
+                  <ul className="mt-3 space-y-1.5" role="list">
+                    {q.choices.map((choice) => {
+                      const isAnswer = choice.id === q.answerId
+                      const isChosen = choice.id === chosen
+                      return (
+                        <li
+                          key={choice.id}
+                          className={cn(
+                            "flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-xs",
+                            isAnswer
+                              ? "border-emerald-500/40 bg-emerald-500/5"
+                              : isChosen
+                                ? "border-destructive/40 bg-destructive/5"
+                                : "border-border/60 bg-transparent"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "grid size-5 shrink-0 place-items-center rounded-sm border font-mono text-[10px] uppercase",
+                              isAnswer
+                                ? "border-emerald-500 bg-emerald-500 text-white"
+                                : isChosen
+                                  ? "border-destructive bg-destructive text-white"
+                                  : "border-border text-muted-foreground"
+                            )}
+                          >
+                            {choice.id}
+                          </span>
+                          <span className="min-w-0 flex-1">{choice.text}</span>
+                          {isAnswer && (
+                            <span className="shrink-0 font-mono text-[10px] text-emerald-600 uppercase dark:text-emerald-400">
+                              correct
+                            </span>
+                          )}
+                          {!isAnswer && isChosen && (
+                            <span className="shrink-0 font-mono text-[10px] text-destructive uppercase">
+                              your pick
+                            </span>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+
+                  {q.explanation && (
+                    <div className="mt-3 rounded-md border-l-2 border-muted-foreground/30 bg-muted/30 px-3 py-2">
+                      <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+                        Why
+                      </p>
+                      <p className="mt-1 text-sm text-foreground/85">
+                        {q.explanation}
+                      </p>
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
             )
           })}
-        </ol>
+        </Accordion>
       </section>
-
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <Button asChild variant="outline">
-          <Link href={setupHref}>
-            <RotateCcw data-icon="inline-start" aria-hidden />
-            Back to setup
-          </Link>
-        </Button>
-        <Button asChild>
-          <Link href={mode === "practice" ? "/practice" : "/exam"}>
-            Start a new {mode === "practice" ? "session" : "mock exam"}
-          </Link>
-        </Button>
-      </div>
     </main>
   )
 }

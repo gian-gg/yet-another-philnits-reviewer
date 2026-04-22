@@ -221,7 +221,6 @@ export function SessionRunner({
   if (isFinished) {
     return (
       <SessionResults
-        mode={mode}
         modeLabel={modeLabel}
         questions={questions}
         answers={answers}
