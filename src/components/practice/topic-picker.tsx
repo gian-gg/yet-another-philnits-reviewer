@@ -1,5 +1,7 @@
 "use client"
 
+import { CheckIcon, MinusIcon } from "lucide-react"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import { CATEGORIES, topicsByCategory, type TopicId } from "@/lib/topics"
 import { cn } from "@/lib/utils"
@@ -83,12 +85,23 @@ function CategorySection({
         className="group flex w-full items-center gap-3 rounded-t-lg border-b px-4 py-3 text-left transition-colors hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
         aria-label={`${allChecked ? "Clear" : "Select"} all ${category.label}`}
       >
-        <Checkbox
-          checked={headerState}
-          tabIndex={-1}
+        <span
           aria-hidden
-          className="pointer-events-none"
-        />
+          data-state={
+            headerState === true
+              ? "checked"
+              : headerState === "indeterminate"
+                ? "indeterminate"
+                : "unchecked"
+          }
+          className="relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input bg-background text-primary-foreground transition-colors data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary"
+        >
+          {headerState === true ? (
+            <CheckIcon className="size-3.5" />
+          ) : headerState === "indeterminate" ? (
+            <MinusIcon className="size-3.5" />
+          ) : null}
+        </span>
         <h2
           id={`cat-${category.id}`}
           className="flex-1 font-heading text-sm font-semibold tracking-tight"
