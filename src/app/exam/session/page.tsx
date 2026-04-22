@@ -1,4 +1,5 @@
 import { getQuestions } from "@/lib/questions"
+import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
 
 const EXAM_QUESTION_COUNT = 60
@@ -16,6 +17,10 @@ export default async function Page({ searchParams }: PageProps) {
     count: EXAM_QUESTION_COUNT,
     seed: Number.isFinite(seed) ? seed : undefined,
   })
+
+  if (questions.length === 0) {
+    return <SessionEmpty modeLabel="Mock Exam" setupHref="/exam" topics="all" />
+  }
 
   return (
     <SessionRunner

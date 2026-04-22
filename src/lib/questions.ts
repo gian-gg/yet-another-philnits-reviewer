@@ -238,11 +238,11 @@ export function getQuestions({
       ? bank.slice()
       : bank.filter((q) => topics.includes(q.topic))
 
-  // Fall back to the full bank if the filter left us with nothing.
-  const source = pool.length > 0 ? pool : bank.slice()
-  if (source.length === 0) return []
+  // Enforce the filter: if nothing matches, return an empty pool rather than
+  // silently falling back to the full bank.
+  if (pool.length === 0) return []
 
-  const shuffled = shuffle(source, rand)
+  const shuffled = shuffle(pool, rand)
 
   // Cycle with suffixed ids if the bank is smaller than requested count.
   const out: Question[] = []

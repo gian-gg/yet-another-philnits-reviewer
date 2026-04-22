@@ -3,6 +3,7 @@ import {
   parseCountParam,
   parseTopicsParam,
 } from "@/lib/questions"
+import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
 
 interface PageProps {
@@ -23,6 +24,16 @@ export default async function Page({ searchParams }: PageProps) {
     count,
     seed: Number.isFinite(seed) ? seed : undefined,
   })
+
+  if (questions.length === 0) {
+    return (
+      <SessionEmpty
+        modeLabel="Practice"
+        setupHref="/practice"
+        topics={topics}
+      />
+    )
+  }
 
   return (
     <SessionRunner
