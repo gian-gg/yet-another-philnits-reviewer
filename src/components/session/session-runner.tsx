@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,6 +12,16 @@ import {
   XCircle,
 } from "lucide-react"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
@@ -46,6 +56,10 @@ export function SessionRunner({
   setupHref,
   modeLabel,
 }: SessionRunnerProps) {
+  const router = useRouter()
+  const [confirm, setConfirm] = useState<null | "exit" | "submit" | "finish">(
+    null
+  )
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<AnswerMap>({})
   const [revealed, setRevealed] = useState<Record<string, true | undefined>>({})
@@ -137,6 +151,44 @@ export function SessionRunner({
     setSubmitted(true)
   }, [])
 
+  const requestExit = useCallback(() => {
+    if (answeredCount === 0) {
+      router.push(setupHref)
+      return
+    }
+    setConfirm("exit")
+  }, [answeredCount, router, setupHref])
+
+  const requestSubmit = useCallback(() => {
+    setConfirm("submit")
+  }, [])
+
+  const requestFinish = useCallback(() => {
+    setConfirm("finish")
+  }, [])
+
+  const confirmExit = useCallback(() => {
+    setConfirm(null)
+    router.push(setupHref)
+  }, [router, setupHref])
+
+  const confirmSubmit = useCallback(() => {
+    setConfirm(null)
+    submit()
+  }, [submit])
+
+  // Warn on refresh / close when progress exists.
+  useEffect(() => {
+    if (isFinished || answeredCount === 0) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      // Required by some browsers to trigger the prompt.
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", handler)
+    return () => window.removeEventListener("beforeunload", handler)
+  }, [isFinished, answeredCount])
+
   // Keyboard shortcuts
   useEffect(() => {
     if (isFinished) return
@@ -198,13 +250,14 @@ export function SessionRunner({
       {/* Top sticky bar */}
       <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link
-            href={setupHref}
+          <button
+            type="button"
+            onClick={requestExit}
             className="inline-flex items-center gap-1.5 text-xs tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-3" aria-hidden />
             Exit
-          </Link>
+          </button>
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {modeLabel}
           </span>
@@ -494,7 +547,12 @@ export function SessionRunner({
           </span>
 
           {canSubmit && (
-            <Button variant="outline" size="sm" onClick={submit} type="button">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={requestSubmit}
+              type="button"
+            >
               Submit
             </Button>
           )}
@@ -510,13 +568,105 @@ export function SessionRunner({
               <ArrowRight data-icon="inline-end" aria-hidden />
             </Button>
           ) : (
-            <Button size="sm" onClick={submit} type="button">
+            <Button size="sm" onClick={requestFinish} type="button">
               Finish
               <ArrowRight data-icon="inline-end" aria-hidden />
             </Button>
           )}
         </div>
       </div>
+
+      <AlertDialog
+        open={confirm === "exit"}
+        onOpenChange={(open) => !open && setConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exit session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ve answered {answeredCount} of {total} questions. Leaving
+              now discards this session — your answers won&apos;t be saved or
+              scored.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep going</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmExit}>
+              Exit anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirm === "submit"}
+        onOpenChange={(open) => !open && setConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit this mock exam?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {answeredCount < total ? (
+                <>
+                  You have{" "}
+                  <span className="font-mono text-foreground tabular-nums">
+                    {total - answeredCount}
+                  </span>{" "}
+                  unanswered{" "}
+                  {total - answeredCount === 1 ? "question" : "questions"}.
+                  Unanswered questions are marked wrong. You can&apos;t change
+                  answers after submitting.
+                </>
+              ) : (
+                <>
+                  All {total} questions answered. You can&apos;t change answers
+                  after submitting.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep answering</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSubmit}>
+              Submit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirm === "finish"}
+        onOpenChange={(open) => !open && setConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finish and see results?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {answeredCount < total ? (
+                <>
+                  You have{" "}
+                  <span className="font-mono text-foreground tabular-nums">
+                    {total - answeredCount}
+                  </span>{" "}
+                  unanswered{" "}
+                  {total - answeredCount === 1 ? "question" : "questions"}. They
+                  will be marked wrong.
+                </>
+              ) : (
+                <>
+                  You&apos;ve answered all {total} questions. Ready to review?
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep going</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSubmit}>
+              Finish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
