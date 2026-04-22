@@ -269,7 +269,7 @@ export function SessionRunner({
               variant={isFlagged ? "default" : "outline"}
               onClick={toggleFlag}
               aria-pressed={isFlagged}
-              title={isFlagged ? "Unflag question" : "Flag for review"}
+              title={isFlagged ? "Unflag question (F)" : "Flag for review (F)"}
             >
               <Flag
                 data-icon="inline-start"
@@ -331,6 +331,7 @@ export function SessionRunner({
                       onClick={() => selectChoice(choice.id)}
                       disabled={isRevealed}
                       aria-pressed={isChosen}
+                      title={`Press ${choice.id.toUpperCase()}`}
                       className={cn(
                         "group flex w-full items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors",
                         "hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-card",
@@ -387,9 +388,15 @@ export function SessionRunner({
                   Commit when you&apos;re ready — reveal the correct choice and
                   explanation. You can still change your pick until you reveal.
                 </p>
-                <Button type="button" size="sm" onClick={revealCurrent}>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={revealCurrent}
+                  title="Reveal answer (R)"
+                >
                   <Eye data-icon="inline-start" aria-hidden />
                   Reveal answer
+                  <Kbd>R</Kbd>
                 </Button>
               </div>
             )}
@@ -429,6 +436,35 @@ export function SessionRunner({
                 </p>
               </div>
             )}
+
+            <div className="mt-8 hidden flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground sm:flex">
+              <span className="font-mono tracking-widest uppercase">Keys</span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>A</Kbd>
+                <span className="text-muted-foreground/60">–</span>
+                <Kbd>D</Kbd>
+                <span>pick</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>←</Kbd>
+                <Kbd>→</Kbd>
+                <span>nav</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>↵</Kbd>
+                <span>next</span>
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>F</Kbd>
+                <span>flag</span>
+              </span>
+              {mode === "practice" && (
+                <span className="inline-flex items-center gap-1">
+                  <Kbd>R</Kbd>
+                  <span>reveal</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -447,6 +483,7 @@ export function SessionRunner({
             onClick={goPrev}
             disabled={index === 0}
             type="button"
+            title="Previous question (←)"
           >
             <ArrowLeft data-icon="inline-start" aria-hidden />
             <span className="hidden sm:inline">Prev</span>
@@ -463,7 +500,12 @@ export function SessionRunner({
           )}
 
           {index < total - 1 ? (
-            <Button size="sm" onClick={goNext} type="button">
+            <Button
+              size="sm"
+              onClick={goNext}
+              type="button"
+              title="Next question (→ or Enter)"
+            >
               <span className="hidden sm:inline">Next</span>
               <ArrowRight data-icon="inline-end" aria-hidden />
             </Button>
@@ -531,6 +573,14 @@ function QuestionNav({
         })}
       </ol>
     </nav>
+  )
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex h-4 min-w-4 items-center justify-center rounded border border-border/70 bg-muted/60 px-1 font-mono text-[10px] leading-none text-muted-foreground">
+      {children}
+    </kbd>
   )
 }
 
