@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Clock,
   Eye,
   EyeOff,
   Flag,
@@ -67,6 +68,7 @@ export function SessionRunner({
   const [submitted, setSubmitted] = useState(false)
   const [feedbackMode, setFeedbackMode] =
     useState<PracticeFeedbackMode>("deferred")
+  const [timerHidden, setTimerHidden] = useState(false)
 
   const total = questions.length
   const current = questions[index]
@@ -270,17 +272,34 @@ export function SessionRunner({
               </span>
             </span>
             {msRemaining !== null && (
-              <span
+              <button
+                type="button"
+                onClick={() => setTimerHidden((v) => !v)}
+                aria-label={
+                  timerHidden ? "Show remaining time" : "Hide remaining time"
+                }
+                aria-pressed={timerHidden}
+                title={
+                  timerHidden ? "Show remaining time" : "Hide remaining time"
+                }
                 className={cn(
-                  "rounded-md border px-2 py-0.5",
-                  lowTime
-                    ? "border-destructive/40 text-destructive"
-                    : "border-border text-foreground"
+                  "group relative inline-flex w-[3.25rem] items-center justify-center rounded-md border px-2 py-0.5 transition-colors",
+                  timerHidden
+                    ? "border-border text-muted-foreground hover:text-foreground"
+                    : lowTime
+                      ? "border-destructive/40 text-destructive"
+                      : "border-border text-foreground hover:bg-muted/50"
                 )}
-                aria-live={lowTime ? "assertive" : "polite"}
+                aria-live={!timerHidden && lowTime ? "assertive" : "off"}
               >
-                {formatTime(msRemaining)}
-              </span>
+                {timerHidden ? (
+                  <span className="inline-flex h-4 items-center">
+                    <Clock className="size-3" aria-hidden />
+                  </span>
+                ) : (
+                  formatTime(msRemaining)
+                )}
+              </button>
             )}
           </span>
         </div>
