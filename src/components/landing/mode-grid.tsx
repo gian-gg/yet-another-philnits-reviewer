@@ -15,9 +15,9 @@ export function ModeGrid() {
         href="/exam"
         index="02"
         label="Mock Exam"
-        meta="Timed"
+        meta="60Q · 90m"
         title="Mock exam"
-        description="Timed full run. Feedback and review after you submit."
+        description="Fixed 60-question run, 90-minute timer. Review after submission."
       />
     </section>
   )

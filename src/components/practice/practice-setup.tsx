@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { NumberStepper } from "@/components/ui/number-stepper"
 import { TOPICS, type TopicId } from "@/lib/topics"
 
 import { TopicPicker } from "./topic-picker"
@@ -22,20 +23,6 @@ export function PracticeSetup() {
     () => new Set(ALL_TOPIC_IDS)
   )
   const [questionCount, setQuestionCount] = useState<number>(QUESTION_DEFAULT)
-  const [questionInput, setQuestionInput] = useState<string>(
-    String(QUESTION_DEFAULT)
-  )
-
-  const commitQuestionCount = (raw: string) => {
-    const parsed = Number.parseInt(raw, 10)
-    if (!Number.isFinite(parsed)) {
-      setQuestionInput(String(questionCount))
-      return
-    }
-    const clamped = Math.min(QUESTION_MAX, Math.max(QUESTION_MIN, parsed))
-    setQuestionCount(clamped)
-    setQuestionInput(String(clamped))
-  }
 
   const toggle = (id: TopicId) => {
     setSelected((prev) => {
@@ -138,11 +125,12 @@ export function PracticeSetup() {
               <span className="hidden sm:inline">{status}</span>
             </p>
             <div className="sm:hidden">
-              <QuestionStepper
-                questionCount={questionCount}
-                questionInput={questionInput}
-                setQuestionInput={setQuestionInput}
-                commitQuestionCount={commitQuestionCount}
+              <NumberStepper
+                value={questionCount}
+                min={QUESTION_MIN}
+                max={QUESTION_MAX}
+                onChange={setQuestionCount}
+                aria-label="Number of questions"
               />
             </div>
           </div>
@@ -151,11 +139,12 @@ export function PracticeSetup() {
             <span className="shrink-0 text-sm text-muted-foreground">
               How many questions?
             </span>
-            <QuestionStepper
-              questionCount={questionCount}
-              questionInput={questionInput}
-              setQuestionInput={setQuestionInput}
-              commitQuestionCount={commitQuestionCount}
+            <NumberStepper
+              value={questionCount}
+              min={QUESTION_MIN}
+              max={QUESTION_MAX}
+              onChange={setQuestionCount}
+              aria-label="Number of questions"
             />
             <div
               className="hidden items-center gap-1 md:flex"
@@ -168,7 +157,7 @@ export function PracticeSetup() {
                   <button
                     key={preset}
                     type="button"
-                    onClick={() => commitQuestionCount(String(preset))}
+                    onClick={() => setQuestionCount(preset)}
                     aria-pressed={active}
                     className={
                       active
@@ -196,64 +185,6 @@ export function PracticeSetup() {
           </Button>
         </div>
       </div>
-    </div>
-  )
-}
-
-interface QuestionStepperProps {
-  questionCount: number
-  questionInput: string
-  setQuestionInput: (v: string) => void
-  commitQuestionCount: (v: string) => void
-}
-
-function QuestionStepper({
-  questionCount,
-  questionInput,
-  setQuestionInput,
-  commitQuestionCount,
-}: QuestionStepperProps) {
-  return (
-    <div
-      className="flex items-center overflow-hidden rounded-md border bg-background focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30"
-      role="group"
-      aria-label="Number of questions"
-    >
-      <button
-        type="button"
-        onClick={() => commitQuestionCount(String(questionCount - 1))}
-        disabled={questionCount <= QUESTION_MIN}
-        className="grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-8"
-        aria-label="Decrease question count"
-      >
-        −
-      </button>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={QUESTION_MIN}
-        max={QUESTION_MAX}
-        value={questionInput}
-        onChange={(e) => setQuestionInput(e.target.value)}
-        onBlur={(e) => commitQuestionCount(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault()
-            commitQuestionCount(e.currentTarget.value)
-          }
-        }}
-        className="h-9 w-14 [appearance:textfield] border-x bg-transparent text-center font-mono text-sm tabular-nums outline-none sm:h-8 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        aria-label="Number of questions"
-      />
-      <button
-        type="button"
-        onClick={() => commitQuestionCount(String(questionCount + 1))}
-        disabled={questionCount >= QUESTION_MAX}
-        className="grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 sm:size-8"
-        aria-label="Increase question count"
-      >
-        +
-      </button>
     </div>
   )
 }
