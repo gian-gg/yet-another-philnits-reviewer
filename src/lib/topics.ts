@@ -1,18 +1,28 @@
 export type CategoryId = "technology" | "management" | "strategy"
 
 export type TopicId =
-  | "hardware"
-  | "software"
-  | "database"
+  | "number-systems"
+  | "applied-math"
+  | "discrete-math"
+  | "computer-architecture"
+  | "operating-systems"
+  | "digital-logic"
+  | "computer-graphics"
+  | "databases"
   | "networking"
-  | "security"
-  | "algorithms"
-  | "system-development"
+  | "cybersecurity"
+  | "software-engineering"
+  | "software-testing"
+  | "emerging-tech"
   | "project-management"
-  | "service-management"
+  | "it-service-management"
+  | "system-auditing"
+  | "quality-management"
+  | "corporate-finance"
+  | "business-strategy"
   | "system-strategy"
-  | "corporate"
-  | "legal"
+  | "law-ip"
+  | "digital-trends"
 
 export interface Category {
   id: CategoryId
@@ -34,20 +44,50 @@ export const CATEGORIES: readonly Category[] = [
 
 export const TOPICS: readonly Topic[] = [
   {
-    id: "hardware",
-    label: "Hardware",
-    description: "Computer systems, CPU, memory, I/O",
+    id: "number-systems",
+    label: "Number Systems & Data Representation",
+    description: "Binary, hex, encoding, fixed/floating point",
     category: "technology",
   },
   {
-    id: "software",
-    label: "Software",
-    description: "Basic theory, OS, middleware",
+    id: "applied-math",
+    label: "Applied Mathematics",
+    description: "Probability, statistics, numerical methods",
     category: "technology",
   },
   {
-    id: "database",
-    label: "Database",
+    id: "discrete-math",
+    label: "Discrete Math & Algorithms",
+    description: "Logic, sets, graphs, complexity",
+    category: "technology",
+  },
+  {
+    id: "computer-architecture",
+    label: "Computer Architecture & Hardware",
+    description: "CPU, memory, I/O, storage",
+    category: "technology",
+  },
+  {
+    id: "operating-systems",
+    label: "Operating Systems",
+    description: "Processes, scheduling, memory, file systems",
+    category: "technology",
+  },
+  {
+    id: "digital-logic",
+    label: "Digital Logic",
+    description: "Gates, circuits, boolean algebra",
+    category: "technology",
+  },
+  {
+    id: "computer-graphics",
+    label: "Computer Graphics",
+    description: "Rendering, color models, image processing",
+    category: "technology",
+  },
+  {
+    id: "databases",
+    label: "Databases",
     description: "Relational models, SQL, transactions",
     category: "technology",
   },
@@ -58,21 +98,27 @@ export const TOPICS: readonly Topic[] = [
     category: "technology",
   },
   {
-    id: "security",
-    label: "Security",
+    id: "cybersecurity",
+    label: "Cybersecurity",
     description: "Cryptography, access control, threats",
     category: "technology",
   },
   {
-    id: "algorithms",
-    label: "Algorithms",
-    description: "Data structures, complexity, searching",
+    id: "software-engineering",
+    label: "Software Engineering & Design",
+    description: "SDLC, design patterns, architecture",
     category: "technology",
   },
   {
-    id: "system-development",
-    label: "System Development",
-    description: "SDLC, design, testing, maintenance",
+    id: "software-testing",
+    label: "Software Testing",
+    description: "Test strategies, coverage, QA",
+    category: "technology",
+  },
+  {
+    id: "emerging-tech",
+    label: "Emerging Technologies",
+    description: "AI, IoT, blockchain, cloud",
     category: "technology",
   },
   {
@@ -82,10 +128,34 @@ export const TOPICS: readonly Topic[] = [
     category: "management",
   },
   {
-    id: "service-management",
-    label: "Service Management",
+    id: "it-service-management",
+    label: "IT Service Management (ITSM)",
     description: "Operations, SLAs, incident response",
     category: "management",
+  },
+  {
+    id: "system-auditing",
+    label: "System Auditing",
+    description: "Controls, compliance, audit process",
+    category: "management",
+  },
+  {
+    id: "quality-management",
+    label: "Quality Management",
+    description: "QA/QC, standards, continuous improvement",
+    category: "management",
+  },
+  {
+    id: "corporate-finance",
+    label: "Corporate Finance",
+    description: "Accounting, budgeting, financial analysis",
+    category: "management",
+  },
+  {
+    id: "business-strategy",
+    label: "Business Strategy",
+    description: "Management, marketing, OR",
+    category: "strategy",
   },
   {
     id: "system-strategy",
@@ -94,15 +164,15 @@ export const TOPICS: readonly Topic[] = [
     category: "strategy",
   },
   {
-    id: "corporate",
-    label: "Corporate & Business",
-    description: "Management, accounting, OR",
+    id: "law-ip",
+    label: "Law & Intellectual Property",
+    description: "Laws, standards, compliance",
     category: "strategy",
   },
   {
-    id: "legal",
-    label: "Legal & Standards",
-    description: "Laws, standards, compliance",
+    id: "digital-trends",
+    label: "Digital Trends",
+    description: "DX, emerging business tech",
     category: "strategy",
   },
 ] as const
