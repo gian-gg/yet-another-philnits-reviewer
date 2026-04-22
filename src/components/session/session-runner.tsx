@@ -52,7 +52,7 @@ export function SessionRunner({
   const [flagged, setFlagged] = useState<Set<string>>(() => new Set())
   const [submitted, setSubmitted] = useState(false)
   const [feedbackMode, setFeedbackMode] =
-    useState<PracticeFeedbackMode>("instant")
+    useState<PracticeFeedbackMode>("deferred")
 
   const total = questions.length
   const current = questions[index]
@@ -114,6 +114,14 @@ export function SessionRunner({
   const goNext = useCallback(() => {
     setIndex((i) => Math.min(total - 1, i + 1))
   }, [total])
+
+  const goTo = useCallback(
+    (next: number) => {
+      if (next < 0 || next >= total) return
+      setIndex(next)
+    },
+    [total]
+  )
 
   const toggleFlag = useCallback(() => {
     if (!current) return
@@ -237,172 +245,194 @@ export function SessionRunner({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl px-4 pt-3 sm:px-6">
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            type="button"
-            size="xs"
-            variant={isFlagged ? "default" : "outline"}
-            onClick={toggleFlag}
-            aria-pressed={isFlagged}
-            title={isFlagged ? "Unflag question" : "Flag for review"}
-          >
-            <Flag
-              data-icon="inline-start"
-              aria-hidden
-              className={isFlagged ? "fill-current" : ""}
+      <div className="mx-auto grid w-full grid-cols-1 px-4 sm:px-6 xl:grid-cols-[1fr_minmax(0,48rem)_1fr] xl:gap-6">
+        <aside
+          aria-label="Question navigator"
+          className="hidden self-start pt-16 xl:block xl:justify-self-center"
+        >
+          <div className="sticky top-24 w-20">
+            <QuestionNav
+              questions={questions}
+              currentIndex={index}
+              answers={answers}
+              flagged={flagged}
+              onJump={goTo}
             />
-            {isFlagged ? "Flagged" : "Flag"}
-          </Button>
+          </div>
+        </aside>
 
-          {mode === "practice" && (
+        <div className="min-w-0 pt-3">
+          <div className="flex items-center justify-between gap-3">
             <Button
               type="button"
               size="xs"
-              variant={feedbackMode === "instant" ? "default" : "outline"}
-              onClick={toggleFeedbackMode}
-              aria-pressed={feedbackMode === "instant"}
-              title={
-                feedbackMode === "instant"
-                  ? "Feedback shows on answer (press to defer)"
-                  : "Reveal answer on demand (press to auto-reveal)"
-              }
+              variant={isFlagged ? "default" : "outline"}
+              onClick={toggleFlag}
+              aria-pressed={isFlagged}
+              title={isFlagged ? "Unflag question" : "Flag for review"}
             >
-              {feedbackMode === "instant" ? (
-                <Eye data-icon="inline-start" aria-hidden />
-              ) : (
-                <EyeOff data-icon="inline-start" aria-hidden />
-              )}
-              Feedback: {feedbackMode === "instant" ? "Instant" : "On reveal"}
+              <Flag
+                data-icon="inline-start"
+                aria-hidden
+                className={isFlagged ? "fill-current" : ""}
+              />
+              {isFlagged ? "Flagged" : "Flag"}
             </Button>
-          )}
-        </div>
-      </div>
 
-      {/* Question body */}
-      <div className="mx-auto w-full max-w-3xl flex-1 px-4 pt-5 pb-32 sm:px-6">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-            {TOPIC_LABEL[current.topic] ?? current.topic}
-          </span>
-          <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-            {current.id}
-          </span>
-        </div>
-
-        <h1 className="font-heading text-lg leading-snug font-semibold tracking-tight sm:text-xl">
-          {current.prompt}
-        </h1>
-
-        <ul className="mt-6 space-y-2" role="list">
-          {current.choices.map((choice) => {
-            const isChosen = chosen === choice.id
-            const isAnswer = current.answerId === choice.id
-            const showAsCorrect = isRevealed && isAnswer
-            const showAsWrong = isRevealed && isChosen && !isAnswer
-
-            return (
-              <li key={choice.id}>
-                <button
-                  type="button"
-                  onClick={() => selectChoice(choice.id)}
-                  disabled={isRevealed}
-                  aria-pressed={isChosen}
-                  className={cn(
-                    "group flex w-full items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors",
-                    "hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-card",
-                    "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
-                    isChosen &&
-                      !isRevealed &&
-                      "border-foreground/60 bg-accent/40",
-                    showAsCorrect &&
-                      "border-emerald-500/60 bg-emerald-500/10 text-foreground",
-                    showAsWrong &&
-                      "border-destructive/60 bg-destructive/10 text-foreground"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border font-mono text-xs uppercase",
-                      isChosen &&
-                        !isRevealed &&
-                        "border-foreground bg-foreground text-background",
-                      showAsCorrect &&
-                        "border-emerald-500 bg-emerald-500 text-white",
-                      showAsWrong &&
-                        "border-destructive bg-destructive text-white"
-                    )}
-                  >
-                    {choice.id}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="text-sm leading-snug sm:text-base">
-                      {choice.text}
-                    </span>
-                  </span>
-                  {showAsCorrect && (
-                    <CheckCircle2
-                      className="size-5 shrink-0 text-emerald-500"
-                      aria-hidden
-                    />
-                  )}
-                  {showAsWrong && (
-                    <XCircle
-                      className="size-5 shrink-0 text-destructive"
-                      aria-hidden
-                    />
-                  )}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-
-        {canReveal && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-card/50 px-4 py-3">
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              Commit when you&apos;re ready — reveal the correct choice and
-              explanation. You can still change your pick until you reveal.
-            </p>
-            <Button type="button" size="sm" onClick={revealCurrent}>
-              <Eye data-icon="inline-start" aria-hidden />
-              Reveal answer
-            </Button>
-          </div>
-        )}
-
-        {isRevealed && (
-          <div
-            className={cn(
-              "mt-6 rounded-lg border p-4",
-              isCorrect
-                ? "border-emerald-500/40 bg-emerald-500/5"
-                : "border-destructive/40 bg-destructive/5"
+            {mode === "practice" && (
+              <Button
+                type="button"
+                size="xs"
+                variant={feedbackMode === "instant" ? "default" : "outline"}
+                onClick={toggleFeedbackMode}
+                aria-pressed={feedbackMode === "instant"}
+                title={
+                  feedbackMode === "instant"
+                    ? "Feedback shows on answer (press to defer)"
+                    : "Reveal answer on demand (press to auto-reveal)"
+                }
+              >
+                {feedbackMode === "instant" ? (
+                  <Eye data-icon="inline-start" aria-hidden />
+                ) : (
+                  <EyeOff data-icon="inline-start" aria-hidden />
+                )}
+                Feedback: {feedbackMode === "instant" ? "Instant" : "On reveal"}
+              </Button>
             )}
-          >
-            <div className="flex items-center gap-2">
-              {isCorrect ? (
-                <CheckCircle2 className="size-4 text-emerald-500" aria-hidden />
-              ) : (
-                <XCircle className="size-4 text-destructive" aria-hidden />
-              )}
-              <span className="text-sm font-medium">
-                {isCorrect ? "Correct." : "Not quite."}
-              </span>
-              {!isCorrect && (
-                <span className="ml-1 text-sm text-muted-foreground">
-                  Answer:{" "}
-                  <span className="font-mono text-foreground uppercase">
-                    {current.answerId}
-                  </span>
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {current.explanation}
-            </p>
           </div>
-        )}
+
+          {/* Question body */}
+          <div className="pt-5 pb-32">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+                {TOPIC_LABEL[current.topic] ?? current.topic}
+              </span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                {current.id}
+              </span>
+            </div>
+
+            <h1 className="font-heading text-lg leading-snug font-semibold tracking-tight sm:text-xl">
+              {current.prompt}
+            </h1>
+
+            <ul className="mt-6 space-y-2" role="list">
+              {current.choices.map((choice) => {
+                const isChosen = chosen === choice.id
+                const isAnswer = current.answerId === choice.id
+                const showAsCorrect = isRevealed && isAnswer
+                const showAsWrong = isRevealed && isChosen && !isAnswer
+
+                return (
+                  <li key={choice.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectChoice(choice.id)}
+                      disabled={isRevealed}
+                      aria-pressed={isChosen}
+                      className={cn(
+                        "group flex w-full items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors",
+                        "hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-card",
+                        "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
+                        isChosen &&
+                          !isRevealed &&
+                          "border-foreground/60 bg-accent/40",
+                        showAsCorrect &&
+                          "border-emerald-500/60 bg-emerald-500/10 text-foreground",
+                        showAsWrong &&
+                          "border-destructive/60 bg-destructive/10 text-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border font-mono text-xs uppercase",
+                          isChosen &&
+                            !isRevealed &&
+                            "border-foreground bg-foreground text-background",
+                          showAsCorrect &&
+                            "border-emerald-500 bg-emerald-500 text-white",
+                          showAsWrong &&
+                            "border-destructive bg-destructive text-white"
+                        )}
+                      >
+                        {choice.id}
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-sm leading-snug sm:text-base">
+                          {choice.text}
+                        </span>
+                      </span>
+                      {showAsCorrect && (
+                        <CheckCircle2
+                          className="size-5 shrink-0 text-emerald-500"
+                          aria-hidden
+                        />
+                      )}
+                      {showAsWrong && (
+                        <XCircle
+                          className="size-5 shrink-0 text-destructive"
+                          aria-hidden
+                        />
+                      )}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+
+            {canReveal && (
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-card/50 px-4 py-3">
+                <p className="text-xs text-muted-foreground sm:text-sm">
+                  Commit when you&apos;re ready — reveal the correct choice and
+                  explanation. You can still change your pick until you reveal.
+                </p>
+                <Button type="button" size="sm" onClick={revealCurrent}>
+                  <Eye data-icon="inline-start" aria-hidden />
+                  Reveal answer
+                </Button>
+              </div>
+            )}
+
+            {isRevealed && (
+              <div
+                className={cn(
+                  "mt-6 rounded-lg border p-4",
+                  isCorrect
+                    ? "border-emerald-500/40 bg-emerald-500/5"
+                    : "border-destructive/40 bg-destructive/5"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  {isCorrect ? (
+                    <CheckCircle2
+                      className="size-4 text-emerald-500"
+                      aria-hidden
+                    />
+                  ) : (
+                    <XCircle className="size-4 text-destructive" aria-hidden />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isCorrect ? "Correct." : "Not quite."}
+                  </span>
+                  {!isCorrect && (
+                    <span className="ml-1 text-sm text-muted-foreground">
+                      Answer:{" "}
+                      <span className="font-mono text-foreground uppercase">
+                        {current.answerId}
+                      </span>
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {current.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div aria-hidden className="hidden xl:block" />
       </div>
 
       {/* Bottom sticky bar */}
@@ -446,6 +476,61 @@ export function SessionRunner({
         </div>
       </div>
     </div>
+  )
+}
+
+interface QuestionNavProps {
+  questions: readonly Question[]
+  currentIndex: number
+  answers: AnswerMap
+  flagged: ReadonlySet<string>
+  onJump: (index: number) => void
+}
+
+function QuestionNav({
+  questions,
+  currentIndex,
+  answers,
+  flagged,
+  onJump,
+}: QuestionNavProps) {
+  return (
+    <nav aria-label="Question navigator">
+      <ol className="max-h-[70dvh] space-y-px overflow-y-auto" role="list">
+        {questions.map((q, i) => {
+          const isCurrent = i === currentIndex
+          const answered = answers[q.id] != null
+          const isFlaggedItem = flagged.has(q.id)
+
+          return (
+            <li key={q.id}>
+              <button
+                type="button"
+                onClick={() => onJump(i)}
+                aria-current={isCurrent ? "step" : undefined}
+                className={cn(
+                  "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left font-mono text-[11px] tabular-nums transition-colors",
+                  "focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:outline-none",
+                  isCurrent
+                    ? "bg-accent text-foreground"
+                    : answered
+                      ? "text-foreground/75 hover:bg-accent/50 hover:text-foreground"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+              >
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                {isFlaggedItem && (
+                  <Flag
+                    className="size-2.5 shrink-0 text-muted-foreground"
+                    aria-label="Flagged"
+                  />
+                )}
+              </button>
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
   )
 }
 
