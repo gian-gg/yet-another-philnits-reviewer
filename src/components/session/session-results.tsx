@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { CheckCircle2, Flag, ImageIcon, Sparkles, XCircle } from "lucide-react"
 
 import {
@@ -16,6 +15,8 @@ import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
 import { resolveImageUrl } from "@/lib/image"
+
+import { QuestionImage } from "./question-image"
 
 const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label])
@@ -251,16 +252,11 @@ export function SessionResults({
                   )}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="relative w-full overflow-hidden rounded-lg border bg-card">
-                    <Image
-                      src={resolveImageUrl(q.image)}
-                      alt={`Question ${q.id}`}
-                      width={1200}
-                      height={1600}
-                      unoptimized
-                      className="h-auto max-h-[50vh] w-full object-contain"
-                    />
-                  </div>
+                  <QuestionImage
+                    src={q.image}
+                    alt={`Question ${q.id}`}
+                    maxHeightClassName="max-h-[50vh]"
+                  />
 
                   <ul
                     className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4"

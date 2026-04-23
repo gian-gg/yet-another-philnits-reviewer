@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,6 +39,7 @@ import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
 import { resolveImageUrl } from "@/lib/image"
 
+import { QuestionImage } from "./question-image"
 import { SessionResults } from "./session-results"
 
 export type SessionMode = "practice" | "exam"
@@ -448,18 +448,13 @@ export function SessionRunner({
               </span>
             </div>
 
-            <div className="relative w-full overflow-hidden rounded-lg border bg-card">
-              <Image
-                key={current.id}
-                src={resolveImageUrl(current.image)}
-                alt={`Question ${current.id}`}
-                width={1200}
-                height={1600}
-                priority
-                unoptimized
-                className="h-auto max-h-[55vh] w-full object-contain"
-              />
-            </div>
+            <QuestionImage
+              key={current.id}
+              src={current.image}
+              alt={`Question ${current.id}`}
+              priority
+              maxHeightClassName="max-h-[55vh]"
+            />
 
             <ul
               className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
