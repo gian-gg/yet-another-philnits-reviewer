@@ -52,8 +52,8 @@ export function ExamSetup() {
           <FactRow
             icon={<Layers className="size-4" aria-hidden />}
             label="Coverage"
-            value={COVERAGE_SUMMARY}
             hint="Topic mix mirrors a real PhilNITS FE AM paper."
+            detail={COVERAGE_SUMMARY}
           />
         </div>
       </section>
@@ -129,21 +129,29 @@ export function ExamSetup() {
 interface FactRowProps {
   icon: React.ReactNode
   label: string
-  value: string
   hint: string
+  value?: string
+  detail?: string
 }
 
-function FactRow({ icon, label, value, hint }: FactRowProps) {
+function FactRow({ icon, label, value, hint, detail }: FactRowProps) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
       <span className="mt-0.5 text-muted-foreground">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+        {detail ? (
+          <p className="mt-1.5 font-mono text-xs break-words text-foreground/90 tabular-nums">
+            {detail}
+          </p>
+        ) : null}
       </div>
-      <span className="shrink-0 font-mono text-sm text-foreground tabular-nums">
-        {value}
-      </span>
+      {value ? (
+        <span className="shrink-0 font-mono text-sm text-foreground tabular-nums">
+          {value}
+        </span>
+      ) : null}
     </div>
   )
 }
