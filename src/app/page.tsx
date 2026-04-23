@@ -31,7 +31,7 @@ export default function Page() {
             gian-gg
           </a>
         </p>
-        <p className="inline-flex items-center gap-1.5 font-mono tracking-wide">
+        <p className="hidden items-center gap-1.5 font-mono tracking-wide sm:inline-flex">
           press
           <kbd className="inline-flex h-4 min-w-4 items-center justify-center rounded border border-border/70 bg-muted/60 px-1 text-[10px] leading-none text-muted-foreground">
             T

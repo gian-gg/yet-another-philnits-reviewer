@@ -520,7 +520,9 @@ export function SessionRunner({
                 >
                   <Eye data-icon="inline-start" aria-hidden />
                   Reveal answer
-                  <Kbd>R</Kbd>
+                  <span className="hidden sm:contents">
+                    <Kbd>R</Kbd>
+                  </span>
                 </Button>
               </div>
             )}
