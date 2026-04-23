@@ -18,19 +18,13 @@ export function ExamBankStatus() {
           questions
         </p>
       </div>
-      <ul className="mt-2 flex flex-col gap-1">
-        {exams.map((exam) => (
-          <li
-            key={exam.id}
-            className="flex items-baseline justify-between gap-3 text-sm"
-          >
-            <span className="text-foreground">{exam.label}</span>
-            <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-              {exam.questionCount}Q
-            </span>
-          </li>
-        ))}
-      </ul>
+      <p className="mt-2 text-sm text-foreground">
+        All FE AM papers from 2007–2025, Spring and Autumn.
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Only 2020–2025 are classified by topic; earlier years are available as
+        uncategorized.
+      </p>
     </section>
   )
 }
