@@ -1,6 +1,14 @@
+import type { Metadata } from "next"
+
 import { getQuestions } from "@/lib/questions"
 import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
+
+export const metadata: Metadata = {
+  title: "Mock Exam Session",
+  description: "Active 60-question, 90-minute PhilNITS FE mock exam session.",
+  robots: { index: false, follow: false },
+}
 
 const EXAM_QUESTION_COUNT = 60
 const EXAM_DURATION_MINUTES = 90

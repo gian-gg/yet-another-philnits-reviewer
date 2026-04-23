@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import {
   getQuestions,
   parseCountParam,
@@ -5,6 +7,13 @@ import {
 } from "@/lib/questions"
 import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
+
+export const metadata: Metadata = {
+  title: "Practice Session",
+  description:
+    "Active PhilNITS FE practice session with immediate feedback after each question.",
+  robots: { index: false, follow: false },
+}
 
 interface PageProps {
   searchParams: Promise<{ topics?: string; count?: string; seed?: string }>

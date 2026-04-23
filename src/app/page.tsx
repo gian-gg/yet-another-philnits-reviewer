@@ -1,5 +1,15 @@
+import type { Metadata } from "next"
+
 import { LandingHero } from "@/components/landing/landing-hero"
 import { ModeGrid } from "@/components/landing/mode-grid"
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "yet-another-philnits-reviewer",
+  },
+  description:
+    "Pick a study mode: drill PhilNITS FE questions by topic or take a full 60-question, 90-minute mock exam.",
+}
 
 export default function Page() {
   return (
@@ -11,7 +21,7 @@ export default function Page() {
         <p>
           another thing by{" "}
           <a
-            href="https://github.com/gian-gg"
+            href="https://giann.dev"
             target="_blank"
             rel="noreferrer noopener"
             className="text-foreground underline-offset-4 hover:underline"
