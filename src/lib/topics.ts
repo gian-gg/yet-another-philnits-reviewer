@@ -45,12 +45,6 @@ export const CATEGORIES: readonly Category[] = [
 
 export const TOPICS: readonly Topic[] = [
   {
-    id: "uncategorized",
-    label: "Uncategorized",
-    description: "Not yet classified",
-    category: "technology",
-  },
-  {
     id: "number-systems",
     label: "Number Systems & Data Representation",
     description: "Binary, hex, encoding, fixed/floating point",
