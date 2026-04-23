@@ -134,7 +134,7 @@ export async function cropQuestion(
     const h = Math.max(1, endY - startY)
     return sharp(page.buffer)
       .extract({ left: 0, top: startY, width: page.width, height: h })
-      .png({ compressionLevel: 9 })
+      .avif({ quality: 80, effort: 6 })
       .toBuffer()
   }
 
@@ -189,6 +189,6 @@ export async function cropQuestion(
     },
   })
     .composite(composite)
-    .png({ compressionLevel: 9 })
+    .avif({ quality: 80, effort: 6 })
     .toBuffer()
 }

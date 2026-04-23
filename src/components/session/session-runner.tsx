@@ -38,6 +38,7 @@ import {
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import { resolveImageUrl } from "@/lib/image"
 
 import { SessionResults } from "./session-results"
 
@@ -137,10 +138,10 @@ export function SessionRunner({
   const copyQuestionImage = useCallback(async () => {
     if (!current) return
     try {
-      const res = await fetch(current.image)
+      const res = await fetch(resolveImageUrl(current.image))
       const blob = await res.blob()
       await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type || "image/png"]: blob }),
+        new ClipboardItem({ [blob.type || "image/avif"]: blob }),
       ])
       flashCopied("image")
     } catch (err) {
@@ -450,11 +451,12 @@ export function SessionRunner({
             <div className="relative w-full overflow-hidden rounded-lg border bg-card">
               <Image
                 key={current.id}
-                src={current.image}
+                src={resolveImageUrl(current.image)}
                 alt={`Question ${current.id}`}
                 width={1200}
                 height={1600}
                 priority
+                unoptimized
                 className="h-auto max-h-[55vh] w-full object-contain"
               />
             </div>

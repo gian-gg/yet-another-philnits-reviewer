@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import { resolveImageUrl } from "@/lib/image"
 
 const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label])
@@ -252,10 +253,11 @@ export function SessionResults({
                 <AccordionContent>
                   <div className="relative w-full overflow-hidden rounded-lg border bg-card">
                     <Image
-                      src={q.image}
+                      src={resolveImageUrl(q.image)}
                       alt={`Question ${q.id}`}
                       width={1200}
                       height={1600}
+                      unoptimized
                       className="h-auto max-h-[50vh] w-full object-contain"
                     />
                   </div>
@@ -316,10 +318,10 @@ function AskAiRow({ question }: { question: Question }) {
 
   const copyImage = useCallback(async () => {
     try {
-      const res = await fetch(question.image)
+      const res = await fetch(resolveImageUrl(question.image))
       const blob = await res.blob()
       await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type || "image/png"]: blob }),
+        new ClipboardItem({ [blob.type || "image/avif"]: blob }),
       ])
       flash("image")
     } catch (err) {

@@ -5,9 +5,13 @@
  *   <year-code> = YYYY[AS], e.g. 2025A, 2022S, 2010S
  *
  * Input:  previous-exams/<year-code>_FE/*.pdf
- * Output: public/questions/<examId>_NN.png
+ * Output: yapr-assets/<year>/<season>/NN.avif (e.g. yapr-assets/2025/autumn/01.avif)
  *         src/data/questions/<examId>.json
  *         src/data/questions.ts  (regenerated)
+ *
+ * The yapr-assets/ directory is gitignored — it's a staging area for the
+ * separate public assets repo served via jsDelivr. After ingest, copy the
+ * new files into your local clone of yapr-assets, commit, tag, and push.
  */
 
 import fs from "node:fs"
@@ -57,6 +61,8 @@ function main() {
   })
 }
 
+const SEASON: Record<string, string> = { A: "autumn", S: "spring" }
+
 async function run(opts: {
   examId: string
   questionsPdf: string
@@ -65,6 +71,18 @@ async function run(opts: {
   const { examId, questionsPdf, answersPdf } = opts
   console.log(`[${examId}] questions: ${path.relative(ROOT, questionsPdf)}`)
   console.log(`[${examId}] answers:   ${path.relative(ROOT, answersPdf)}`)
+
+  const examMatch = /^(\d{4})([A-Z])_/.exec(examId)
+  if (!examMatch) {
+    console.error(`[${examId}] could not parse year/season from examId`)
+    process.exit(1)
+  }
+  const year = examMatch[1]
+  const season = SEASON[examMatch[2]]
+  if (!season) {
+    console.error(`[${examId}] unknown season letter: ${examMatch[2]}`)
+    process.exit(1)
+  }
 
   const answers = await parseAnswersPdf(answersPdf)
   console.log(`[${examId}] parsed ${answers.size} answers`)
@@ -78,7 +96,7 @@ async function run(opts: {
     process.exit(1)
   }
 
-  const outDir = path.join(ROOT, "public", "questions")
+  const outDir = path.join(ROOT, "yapr-assets", year, season)
   fs.mkdirSync(outDir, { recursive: true })
 
   const entries: DataEntry[] = []
@@ -86,10 +104,11 @@ async function run(opts: {
   for (let i = 0; i < markers.length; i++) {
     const m = markers[i]
     const next = markers[i + 1]
-    const id = `${examId}_${String(m.questionNo).padStart(2, "0")}`
-    const png = await cropQuestion(m, next, pages)
-    const outPath = path.join(outDir, `${id}.png`)
-    fs.writeFileSync(outPath, png)
+    const num = String(m.questionNo).padStart(2, "0")
+    const id = `${examId}_${num}`
+    const buf = await cropQuestion(m, next, pages)
+    const outPath = path.join(outDir, `${num}.avif`)
+    fs.writeFileSync(outPath, buf)
     const answer = answers.get(m.questionNo)
     if (!answer) {
       missingAnswer++
@@ -99,7 +118,7 @@ async function run(opts: {
     entries.push({
       id,
       topic: "uncategorized",
-      image: `/questions/${id}.png`,
+      image: `/${year}/${season}/${num}.avif`,
       answer: answer as ChoiceId,
     })
   }
@@ -110,7 +129,7 @@ async function run(opts: {
   console.log(
     `[${examId}] wrote ${entries.length} entries (skipped ${missingAnswer} without answer)`
   )
-  console.log(`[${examId}] PNGs → public/questions/`)
+  console.log(`[${examId}] AVIFs → yapr-assets/${year}/${season}/`)
   console.log(`[${examId}] JSON  → src/data/questions/${examId}.json`)
   console.log(`[${examId}] aggregate → src/data/questions.ts`)
 }

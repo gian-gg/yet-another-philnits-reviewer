@@ -44,9 +44,26 @@ App runs at `http://localhost:3000`.
 ## Question bank
 
 - Per-exam JSON entries live under `src/data/questions/<examId>.json` with shape `{ id, topic, image, answer }`.
-- Question images live under `public/questions/<id>.png`.
+- Image paths in the JSON follow `<year>/<season>/NN.avif` (e.g. `/2025/autumn/01.avif`).
 - The aggregate `src/data/questions.ts` is generated — never hand-edit it; run `bun run regen:bank` after changing JSONs.
 - Topics are defined in `src/lib/topics.ts`. Use only IDs from the `TopicId` union.
+
+### Image hosting
+
+Question images are served from a separate public repo (`yapr-assets`) via jsDelivr. They are **not** committed to this repo — the ingest pipeline writes to a gitignored `yapr-assets/` directory which acts as a staging area. After ingest, copy new files into your local clone of the assets repo, commit, tag, and push.
+
+`NEXT_PUBLIC_IMAGE_BASE_URL` controls where the app loads images from at runtime:
+
+- **Unset** — paths resolve to `/<year>/<season>/NN.avif` (Next would serve from `public/`). Local dev only works for files you've manually copied into `public/`.
+- **Set** — every JSON `image` path is prefixed with this value. Intended use: a public GitHub repo served via jsDelivr.
+
+Example for production:
+
+```
+NEXT_PUBLIC_IMAGE_BASE_URL=https://cdn.jsdelivr.net/gh/<user>/yapr-assets@<tag>
+```
+
+Pin to a tag (or commit SHA), never `@main`, to avoid jsDelivr's edge-cache returning stale content. `next/image` is rendered with `unoptimized` so Vercel's image optimizer never touches the AVIFs (they're already at final size).
 
 ### Classifying new questions
 

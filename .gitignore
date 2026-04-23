@@ -21,6 +21,9 @@
 # local conversion source material
 /previous-exams/
 
+# ingested question images — pushed to the yapr-assets CDN repo, not this one
+/yapr-assets/
+
 # misc
 .DS_Store
 *.pem
