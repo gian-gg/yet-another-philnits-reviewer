@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { NumberStepper } from "@/components/ui/number-stepper"
 import { TOPICS, type TopicId } from "@/lib/topics"
 
@@ -23,6 +24,8 @@ export function PracticeSetup() {
     () => new Set(ALL_TOPIC_IDS)
   )
   const [questionCount, setQuestionCount] = useState<number>(QUESTION_DEFAULT)
+  const [includeUncategorized, setIncludeUncategorized] =
+    useState<boolean>(false)
 
   const toggle = (id: TopicId) => {
     setSelected((prev) => {
@@ -48,18 +51,27 @@ export function PracticeSetup() {
   const clearAll = () => setSelected(new Set())
 
   const count = selected.size
-  const canStart = count > 0
+  const canStart = count > 0 || includeUncategorized
   const allSelected = count === TOTAL
 
   const status = useMemo(() => {
-    if (count === 0) return "Select at least one topic to start."
-    if (count === TOTAL) return `All ${TOTAL} topics selected.`
-    return `${count} of ${TOTAL} topics selected.`
-  }, [count])
+    if (count === 0) {
+      return includeUncategorized
+        ? "Uncategorized only."
+        : "Select at least one topic to start."
+    }
+    const base =
+      count === TOTAL
+        ? `All ${TOTAL} topics selected.`
+        : `${count} of ${TOTAL} topics selected.`
+    return includeUncategorized ? `${base} + uncategorized` : base
+  }, [count, includeUncategorized])
 
   const start = () => {
     if (!canStart) return
-    const topics = allSelected ? "all" : Array.from(selected).join(",")
+    const ids = Array.from(selected) as string[]
+    if (includeUncategorized) ids.push("uncategorized")
+    const topics = allSelected && !includeUncategorized ? "all" : ids.join(",")
     const params = new URLSearchParams({
       topics,
       count: String(questionCount),
@@ -101,6 +113,23 @@ export function PracticeSetup() {
         onToggle={toggle}
         onToggleCategory={toggleCategory}
       />
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
+        <Checkbox
+          checked={includeUncategorized}
+          onCheckedChange={(v) => setIncludeUncategorized(v === true)}
+          aria-label="Include uncategorized questions"
+          className="mt-0.5"
+        />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm leading-snug font-medium">
+            Include uncategorized questions
+          </span>
+          <span className="mt-0.5 text-xs text-muted-foreground">
+            Older papers (2007–2019) not yet classified by topic.
+          </span>
+        </span>
+      </label>
 
       <div
         className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"

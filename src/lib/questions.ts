@@ -27,7 +27,7 @@ export function parseTopicsParam(
   const ids = raw
     .split(",")
     .map((s) => s.trim())
-    .filter((s): s is TopicId => isTopicId(s))
+    .filter((s): s is TopicId => isTopicId(s) || s === "uncategorized")
   return ids.length > 0 ? ids : "all"
 }
 
@@ -44,8 +44,9 @@ export function parseCountParam(
 // ---------- Bank ----------
 
 const BANK: readonly Question[] = questionsData
-  .filter((q): q is (typeof questionsData)[number] & { topic: TopicId } =>
-    isTopicId(q.topic)
+  .filter(
+    (q): q is (typeof questionsData)[number] & { topic: TopicId } =>
+      isTopicId(q.topic) || q.topic === "uncategorized"
   )
   .map((q) => ({
     id: q.id,
@@ -127,7 +128,7 @@ export function getQuestions({
   const rand = mulberry32(seed)
   const pool =
     !topics || topics === "all"
-      ? BANK.slice()
+      ? BANK.filter((q) => q.topic !== "uncategorized")
       : BANK.filter((q) => topics.includes(q.topic))
 
   if (pool.length === 0) return []
