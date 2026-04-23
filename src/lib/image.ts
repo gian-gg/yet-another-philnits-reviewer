@@ -10,7 +10,7 @@
  *   https://cdn.jsdelivr.net/gh/<user>/<assets-repo>@<tag>
  */
 
-const BASE = "https://cdn.jsdelivr.net/gh/gian-gg/yapr-assets@v1"
+const BASE = "https://cdn.jsdelivr.net/gh/gian-gg/yapr-assets@v2"
 
 export function resolveImageUrl(path: string): string {
   if (!BASE) return path

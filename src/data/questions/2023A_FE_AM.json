@@ -1,0 +1,482 @@
+[
+  {
+    "id": "2023A_FE_AM_01",
+    "topic": "applied-math",
+    "image": "/2023/autumn/01.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_02",
+    "topic": "number-systems",
+    "image": "/2023/autumn/02.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_03",
+    "topic": "applied-math",
+    "image": "/2023/autumn/03.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_04",
+    "topic": "number-systems",
+    "image": "/2023/autumn/04.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_05",
+    "topic": "discrete-math",
+    "image": "/2023/autumn/05.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_06",
+    "topic": "number-systems",
+    "image": "/2023/autumn/06.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_07",
+    "topic": "discrete-math",
+    "image": "/2023/autumn/07.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_08",
+    "topic": "digital-logic",
+    "image": "/2023/autumn/08.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_09",
+    "topic": "computer-architecture",
+    "image": "/2023/autumn/09.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_10",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/10.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_11",
+    "topic": "computer-architecture",
+    "image": "/2023/autumn/11.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_12",
+    "topic": "computer-architecture",
+    "image": "/2023/autumn/12.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_13",
+    "topic": "computer-architecture",
+    "image": "/2023/autumn/13.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_14",
+    "topic": "computer-architecture",
+    "image": "/2023/autumn/14.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_15",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/15.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_16",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/16.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_17",
+    "topic": "operating-systems",
+    "image": "/2023/autumn/17.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_18",
+    "topic": "operating-systems",
+    "image": "/2023/autumn/18.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_19",
+    "topic": "operating-systems",
+    "image": "/2023/autumn/19.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_20",
+    "topic": "digital-logic",
+    "image": "/2023/autumn/20.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_21",
+    "topic": "digital-logic",
+    "image": "/2023/autumn/21.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_22",
+    "topic": "applied-math",
+    "image": "/2023/autumn/22.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_23",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/23.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_24",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/24.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_25",
+    "topic": "databases",
+    "image": "/2023/autumn/25.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_26",
+    "topic": "databases",
+    "image": "/2023/autumn/26.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_27",
+    "topic": "databases",
+    "image": "/2023/autumn/27.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_28",
+    "topic": "databases",
+    "image": "/2023/autumn/28.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_29",
+    "topic": "databases",
+    "image": "/2023/autumn/29.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_30",
+    "topic": "networking",
+    "image": "/2023/autumn/30.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_31",
+    "topic": "networking",
+    "image": "/2023/autumn/31.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_32",
+    "topic": "networking",
+    "image": "/2023/autumn/32.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_33",
+    "topic": "networking",
+    "image": "/2023/autumn/33.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_34",
+    "topic": "networking",
+    "image": "/2023/autumn/34.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_35",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/35.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_36",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/36.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_37",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/37.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_38",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/38.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_39",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/39.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_40",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/40.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_41",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/41.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_42",
+    "topic": "networking",
+    "image": "/2023/autumn/42.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_43",
+    "topic": "software-testing",
+    "image": "/2023/autumn/43.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_44",
+    "topic": "cybersecurity",
+    "image": "/2023/autumn/44.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_45",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/45.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_46",
+    "topic": "software-testing",
+    "image": "/2023/autumn/46.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_47",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/47.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_48",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/48.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_49",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/49.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_50",
+    "topic": "software-engineering",
+    "image": "/2023/autumn/50.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_51",
+    "topic": "applied-math",
+    "image": "/2023/autumn/51.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_52",
+    "topic": "software-testing",
+    "image": "/2023/autumn/52.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_53",
+    "topic": "project-management",
+    "image": "/2023/autumn/53.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_54",
+    "topic": "project-management",
+    "image": "/2023/autumn/54.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_55",
+    "topic": "it-service-management",
+    "image": "/2023/autumn/55.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_56",
+    "topic": "system-strategy",
+    "image": "/2023/autumn/56.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_57",
+    "topic": "it-service-management",
+    "image": "/2023/autumn/57.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_58",
+    "topic": "system-strategy",
+    "image": "/2023/autumn/58.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_59",
+    "topic": "system-auditing",
+    "image": "/2023/autumn/59.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_60",
+    "topic": "system-auditing",
+    "image": "/2023/autumn/60.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_61",
+    "topic": "corporate-finance",
+    "image": "/2023/autumn/61.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_62",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/62.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_63",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/63.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_64",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/64.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_65",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/65.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_66",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/66.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_67",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/67.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_68",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/68.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_69",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/69.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_70",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/70.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_71",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/71.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_72",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/72.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_73",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/73.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_74",
+    "topic": "emerging-tech",
+    "image": "/2023/autumn/74.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_75",
+    "topic": "system-auditing",
+    "image": "/2023/autumn/75.avif",
+    "answer": "c"
+  },
+  {
+    "id": "2023A_FE_AM_76",
+    "topic": "business-strategy",
+    "image": "/2023/autumn/76.avif",
+    "answer": "d"
+  },
+  {
+    "id": "2023A_FE_AM_77",
+    "topic": "applied-math",
+    "image": "/2023/autumn/77.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_78",
+    "topic": "corporate-finance",
+    "image": "/2023/autumn/78.avif",
+    "answer": "b"
+  },
+  {
+    "id": "2023A_FE_AM_79",
+    "topic": "corporate-finance",
+    "image": "/2023/autumn/79.avif",
+    "answer": "a"
+  },
+  {
+    "id": "2023A_FE_AM_80",
+    "topic": "law-ip",
+    "image": "/2023/autumn/80.avif",
+    "answer": "b"
+  }
+]
