@@ -10,81 +10,93 @@ High-level architecture for **philnits-vault**, a minimal PhilNITS review app. F
 
 ## Application shape
 
-Single Next.js (App Router) app, rendered mostly on the client for the interactive question flows. No separate backend service in the MVP.
+Single Next.js (App Router) app, rendered mostly on the client for the interactive question flows. No separate backend service.
+
+Questions are rendered as **screenshots** rather than reconstructed text. A build-time Bun pipeline ingests official ITPEC FE PDFs, crops one image per question, and emits a typed bank. The UI loads that bank and presents a full-bleed question image with A / B / C / D buttons.
 
 ```
-Browser
-  └── Next.js app (App Router, RSC where cheap, CSR for session flows)
-        ├── Question bank loader  ── parses markdown files from /data
-        ├── Session engine        ── in-memory state machine (practice/exam)
-        ├── Persistence layer     ── localStorage (progress, settings)
-        └── UI (shadcn + Tailwind)
+Offline ingestion                         Runtime
+──────────────────                        ───────
+previous-exams/<year>_FE/*.pdf            Browser
+  │                                         └── Next.js app (App Router)
+  ▼ bun run ingest:year <year>                  ├── Question bank  (src/data/questions.ts)
+public/questions/<id>.png   ◀──────────── ──────┤   ↳ generated, typed, bundled
+src/data/questions/<id>.json                    ├── Session engine (in-memory state)
+src/data/questions.ts  (aggregated)             └── UI: <Image> + A/B/C/D
 ```
 
 ## Folder layout
 
 ```
+previous-exams/          Source PDFs, one folder per exam year (read-only input)
+scripts/                 Ingestion pipeline
+  ingest-year.ts         CLI: `bun run ingest:year <year>`
+  lib/
+    pdf-answers.ts       Answer-key parsing
+    pdf-questions.ts     Per-question boundary detection + cropping
+    emit-data.ts         JSON + aggregated TS emitters
+public/questions/        Generated per-question PNGs (served as static assets)
 src/
-  app/                 Route segments (/, /practice, /exam, /review, …)
-  components/          UI components (feature folders + ui/ primitives)
-  hooks/               Reusable hooks (useSession, useReducedMotion, …)
-  lib/                 Pure utilities (question sampling, scoring, storage)
-data/                  Static question bank (Markdown files), authored by hand
-docs/                  Source-of-truth docs (this folder)
-public/                Static assets
+  app/                   Route segments (/, /practice, /exam)
+  components/            UI components (feature folders + ui/ primitives)
+  lib/                   Pure utilities (question sampling, topics, utils)
+  data/
+    questions/<id>.json  Per-exam outputs of the ingestion pipeline
+    questions.ts         Auto-generated aggregate imported by the app
+docs/                    Source-of-truth docs (this folder)
 ```
 
-See [data-model.md](./data-model.md) for the question bank shape and [tech-stack.md](./tech-stack.md) for tool choices.
+See [data-model.md](./data-model.md) for the question shape and ingestion details, and [tech-stack.md](./tech-stack.md) for tool choices.
 
 ## Core subsystems
 
+### Ingestion pipeline (`scripts/ingest-year.ts`)
+
+- Invoked per year: `bun run ingest:year 2025A`.
+- Locates the MCQ question + answer PDFs in `previous-exams/<year>_FE/` via regex (tolerates `AM/PM`, `-A/-B`, `Question/Questions`, `Answer/Answers` naming variants).
+- Parses the answers PDF to a `Map<questionNo, ChoiceId>`.
+- Parses the questions PDF for `Qn.` markers at the left margin (using `pdfjs-dist` text layer), renders each page to a PNG with `@napi-rs/canvas`, and crops each question's bounding box (stitching across page breaks when needed) via `sharp`.
+- Writes `public/questions/<examId>_NN.png`, per-exam `src/data/questions/<examId>.json`, then regenerates `src/data/questions.ts` by merging all per-exam JSON files under `src/data/questions/`.
+- Topic classification is deferred: every question is written with `topic: "uncategorized"` and reclassified manually later.
+
 ### Question bank loader (`src/lib/questions.ts`)
 
-- Reads markdown files from `data/` at build time and emits a typed, in-memory index.
-- Parses frontmatter for metadata (id, topic, difficulty, answer, source) and the markdown body for prompt/choices/explanation.
-- Validates the parsed index once; a malformed file fails the build loudly in dev.
-- Exposes filtered views: by topic, by difficulty, by "unseen / wrong only".
-- No network calls in the MVP.
+- Imports the bundled `QUESTIONS` constant from the auto-generated `src/data/questions.ts`.
+- Filters by `TopicId`, shuffles deterministically (`mulberry32`), and returns a slice of size `count`. Cycles with suffixed ids when the bank is smaller than requested.
+- No filesystem access at runtime — everything is compile-time data.
 
-### Session engine (`src/lib/session.ts`)
+### Session engine (inline in `src/components/session/session-runner.tsx`)
 
-- Pure functions over a `Session` value (see data-model).
-- Deterministic: same inputs → same questions/order (seedable for reproducibility).
-- Two modes: `practice` (immediate feedback) and `exam` (feedback at end).
-
-### Persistence (`src/lib/storage.ts`)
-
-- Thin wrapper over `localStorage` with schema versioning.
-- Stores: user settings (topics, last-mode), session history, wrong-answer log.
-- Survives reload; never blocks the first paint.
+- Holds index, answers, flagged, reveal, timer state in React state.
+- Two modes: `practice` (optional reveal per question) and `exam` (timer, deferred scoring).
+- Keyboard shortcuts: `A`–`D` pick, `←/→` nav, `Enter` next, `F` flag, `R` reveal.
 
 ### Routing
 
 - `/` — landing, mode picker
 - `/practice` — topic selection → practice session → results
 - `/exam` — topic selection → timed exam → score + review
-- `/review` — revisit wrong answers across past sessions
-- `/settings` — preferences (optional, later)
+
+No persistence layer in the current build — sessions are ephemeral. A `localStorage` layer can be added later without touching the data shape.
 
 ## Data flow (practice session)
 
 1. User picks topics on `/practice`.
-2. `questions.filter({topics})` returns a pool.
-3. `session.start(pool, {mode: "practice"})` produces a `Session`.
-4. Each answer calls `session.answer(id, choice)` → new session value.
-5. On finish, summary is written via `storage.saveSession(session)`.
-6. Wrong answers are appended to the review log.
+2. `getQuestions({ topics, count })` filters and shuffles the in-memory bank.
+3. `SessionRunner` renders the current question's image + four letter buttons.
+4. On submit/finish, `SessionResults` computes score and renders the review list with per-question images and correct/chosen letters.
 
-No server round-trips for any step above.
+No server round-trips, no network calls.
 
-## What is explicitly NOT in this architecture (MVP)
+## What is explicitly NOT in this architecture
 
-- No auth, no accounts, no server DB.
-- No realtime, no multiplayer, no social.
-- No analytics beyond what the browser gives us.
-- No i18n layer yet (copy is hard-coded English).
+- No auth, accounts, or server DB.
+- No runtime text extraction — questions are images. Accessibility is degraded until alt text or per-question metadata is authored.
+- No persistence (localStorage deferred).
+- No i18n.
 
 ## Open decisions
 
-- **Question bank source of truth.** Markdown files in-repo, parsed at build time into a typed index. If the bank grows large, the parser output can be precomputed and cached rather than re-parsed per build.
-- **Progress sync across devices.** Deferred. Would require auth + a hosted DB; design the storage layer so the backend swap is additive.
+- **Cross-device progress sync.** Deferred. Would require auth + a hosted DB.
+- **Topic classification.** Currently manual/deferred. Options under consideration: hardcoded question-number → topic map (FE AM follows a stable syllabus order), or LLM-assisted classification from extracted question text.
+- **PM and B-set ingestion.** Out of scope in the current pipeline; MCQ AM/A-set only.

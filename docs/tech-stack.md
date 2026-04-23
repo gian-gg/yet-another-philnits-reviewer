@@ -13,7 +13,17 @@ Tooling and rationale for **philnits-vault**. Choices favor speed of iteration a
 | UI primitives   | shadcn/ui + Radix       | Accessible, unopinionated, copy-into-repo (no vendor lock)    |
 | Icons           | lucide-react            | Tree-shakeable, consistent set                                |
 | Theming         | next-themes             | Dark/light toggle without flash                               |
-| Markdown parse  | gray-matter + remark    | Parse question bank frontmatter + body at build time          |
+| Images          | `next/image`            | Served from `public/questions/*.png` at runtime               |
+
+## Ingestion (devDependencies only — not shipped to the client)
+
+| Piece            | Choice            | Why                                                           |
+| ---------------- | ----------------- | ------------------------------------------------------------- |
+| PDF parsing      | `pdfjs-dist`      | Page text layout + coordinate transforms for marker detection |
+| Page rasterizer  | `@napi-rs/canvas` | Node-native canvas backend pdfjs renders into                 |
+| Image processing | `sharp`           | Crop, stitch page slices, PNG compression                     |
+
+The ingestion pipeline runs offline via `bun run ingest:year <year>` and writes to `public/questions/` + `src/data/`. Its deps never reach the browser.
 
 ## Code quality
 
@@ -35,14 +45,13 @@ See [development.md](./development.md) for how to run these locally.
 
 ## Data
 
-- **Question bank:** markdown files under `data/` in the repo, parsed at build time into a typed index (frontmatter for metadata, body for prompt/choices/explanation).
-- **User state:** `localStorage`, versioned schema, no server.
-
-See [data-model.md](./data-model.md).
+- **Question bank:** generated at ingest time into `src/data/questions.ts`, a typed TS module bundled with the app. Per-question images live under `public/questions/`. See [data-model.md](./data-model.md) for the pipeline.
+- **User state:** in-memory only — session state does not survive reload. `localStorage` persistence is deferred.
 
 ## What we are NOT using (and why)
 
-- **A backend / database.** MVP is local-only; avoids auth, hosting, and migration cost. Revisit when cross-device sync becomes a real need.
-- **A state library (Redux/Zustand).** Session state is local to a route; `useState` + URL state are enough.
+- **A backend / database.** The app is local-only; questions are static assets shipped with the build.
+- **A state library (Redux/Zustand).** Session state is local to a single route; `useState` + URL state are enough.
+- **Runtime markdown / text extraction.** Earlier iterations reconstructed question text from PDFs; extraction was too fragile. Questions are images now — see [architecture.md](./architecture.md).
 - **A test runner.** Not wired yet. When it is, Bun's built-in `bun test` is the default candidate.
 - **CSS-in-JS.** Tailwind covers styling; adding a runtime engine would regress on the "speed over visuals" principle.

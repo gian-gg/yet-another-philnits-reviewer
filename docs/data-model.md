@@ -1,203 +1,129 @@
 # Data Model
 
-Shapes for the question bank, sessions, and persisted user state. All types are TypeScript-flavored pseudocode — the real source lives in `src/lib/types.ts` when implemented.
+Shapes for the question bank and session state. The real types live in `src/lib/questions.ts` and `src/lib/topics.ts`.
 
 ## Question bank
 
-Authored as **one Obsidian-flavored markdown file per question**, organized by topic under `data/`. The files are vault-native — they render cleanly in Obsidian and parse cleanly in the app.
+Questions are **screenshot-based**. Each question is a single cropped PNG rendered from an official ITPEC FE PDF, paired with metadata: id, topic, image path, correct answer letter. There is no authored markdown, no prompt text, no explanation text — the image is the question.
 
 ### On-disk layout
 
 ```
-data/
-  networking/
-    2021A_FE_AM_33.md
-    2022S_FE_AM_41.md
-  database/
-    2021A_FE_AM_45.md
-  ...
+previous-exams/              Source PDFs (read-only input to the pipeline)
+  2025A_FE/
+    2025A_FE-A_Questions.pdf
+    2025A_FE-A_Answers.pdf
+  2022S_FE/
+    2022S_FE_AM_Questions.pdf
+    2022S_FE_AM_Answer.pdf
+  …
+
+public/questions/            Generated per-question PNGs (served statically)
+  2025A_FE_AM_01.png
+  2025A_FE_AM_02.png
+  …
+
+src/data/questions/          Per-exam JSON outputs (generated)
+  2025A_FE_AM.json
+  2025S_FE_AM.json
+  …
+
+src/data/questions.ts        Auto-generated aggregate, imported by the app
 ```
 
-Folder name = topic. The filename stem matches the question id in the H1 heading and must be globally unique.
+### Generated shape
 
-### File shape
+Per-exam JSON (`src/data/questions/<examId>.json`):
 
-```markdown
-Created: 2024-10-18 22:38
-Category: #networking
-Status: #philnits
-
-# 2021A_FE_AM_33 %% ex. 2024S_FE-A_83 %%
-
-Which of the following is an appropriate explanation of DHCP?
-
-a) It is a protocol for accessing a directory service.
-b) It is a protocol for automatically assigning an IP address.
-c) It is a protocol for converting a private IP address to a global IP address.
-d) It is a protocol for forwarding an e-mail.
-?
-b) It is a protocol for automatically assigning an IP address.
-
-### Explanation
-
-**DHCP (Dynamic Host Configuration Protocol)** is a protocol used to
-automatically assign IP addresses to devices on a network. …
-
-### Why the Others Won't Fit
-
-**a) It is a protocol for accessing a directory service**:
-
-- This describes **LDAP**, which is used to access and manage directory
-  services, not to assign IP addresses.
-
-**c) It is a protocol for converting a private IP address to a global IP address**:
-
-- This describes **NAT**, which translates private IP addresses to public
-  (global) IP addresses, not the automatic assignment of IP addresses.
-
-**d) It is a protocol for forwarding an e-mail**:
-
-- This describes **SMTP**, which is used to send and forward emails, not for
-  IP address assignment.
-
-###
-
-## %% ignore this %%
-
-# References %% add your references here %%
-
-[What is DHCP? …](https://efficientip.com/glossary/what-is-dhcp-and-why-is-it-important/)
+```json
+[
+  {
+    "id": "2025A_FE_AM_01",
+    "topic": "uncategorized",
+    "image": "/questions/2025A_FE_AM_01.png",
+    "answer": "d"
+  },
+  …
+]
 ```
 
-### Parse rules
-
-The loader walks the file top to bottom:
-
-1. **Header metadata** — `Key: value` lines before the first blank line. Recognized keys: `Created`, `Category`, `Status`. `Category` is a `#tag` whose value (minus the `#`) is the canonical topic. Unknown keys are preserved but ignored.
-2. **Obsidian comments** — any `%% … %%` span is stripped before further parsing. Handles inline (`# Title %% note %%`) and block forms.
-3. **Question id** — the first `# …` heading after the metadata block. Its stem (before any inline comment) is the `id` and must match the filename.
-4. **Prompt** — all content between the H1 and the first choice line.
-5. **Choices** — consecutive lines matching `^([a-z])\)\s+(.+)$`. The letter is the choice `id`; the rest is the text.
-6. **Answer marker** — a lone `?` line terminates the choices block.
-7. **Answer** — the next non-empty line matching `^([a-z])\)\s+.*$`; its letter is `answerId`. The accompanying text is not stored separately (the choice text is the source of truth).
-8. **Explanation** — content under the `### Explanation` heading until the next `###` or end-of-body.
-9. **Distractor notes** — content under `### Why the Others Won't Fit`, parsed into a map keyed by choice id.
-10. **Footer** — everything from the first standalone `---` onward is treated as Obsidian chrome and discarded, except a `# References` block whose links become `references`.
-
-### Parsed shape (in memory)
+Runtime type (`src/lib/questions.ts`):
 
 ```ts
-type Topic = string // derived from `Category: #...`; validated against an allowlist
+type ChoiceId = "a" | "b" | "c" | "d"
 
-type Question = {
-  id: string // e.g. "2021A_FE_AM_33"
-  topic: Topic
-  prompt: string // raw markdown
-  choices: Choice[]
-  answerId: string // must match one of choices[].id
-  explanation?: string // raw markdown
-  distractorNotes?: Record<string, string> // keyed by choice id (a, c, d, …)
-  references?: Reference[]
-  created?: string // ISO-ish date from `Created:`
-  aliases?: string[] // extra ids from `%% ex. … %%` in the H1
-}
-
-type Choice = {
-  id: string // "a" | "b" | "c" | "d" (lowercase)
-  text: string // raw markdown
-}
-
-type Reference = {
-  label: string
-  url: string
+interface Question {
+  id: string // "<year><season>_FE_AM_<NN>", NN zero-padded
+  topic: TopicId // see src/lib/topics.ts
+  image: string // absolute path under /public, e.g. "/questions/<id>.png"
+  answer: ChoiceId
 }
 ```
-
-Note: there is no `difficulty` field in the source format. If difficulty is needed later, it becomes a new metadata key (`Difficulty: …`) rather than being inferred.
 
 ### Invariants
 
-- Filename stem equals the H1 id (case-sensitive).
-- Every id is unique across the entire `data/` tree.
-- `answerId` matches one of the parsed choice ids.
-- Each question has ≥ 2 choices.
-- `Category` tag resolves to a topic on the allowlist in `src/lib/topics.ts`.
-- A question never appears twice in a single session.
+- `id` is globally unique and matches the PNG filename stem.
+- `answer` is one of `"a" | "b" | "c" | "d"`.
+- `topic` is a valid `TopicId` from `src/lib/topics.ts`. The ingestion pipeline writes `"uncategorized"` for every question; a real topic is assigned manually later.
+- `image` points at an existing file under `public/`. If the PNG is missing, the UI renders a broken-image placeholder.
 
-## Session
+## Ingestion pipeline
 
-In-memory value produced and mutated by `src/lib/session.ts`. Only the **summary** is persisted.
+Invocation: `bun run ingest:year <year-code>` where `<year-code>` matches `YYYY[AS]` (e.g. `2025A`, `2022S`, `2010S`).
+
+Steps:
+
+1. **Resolve PDFs.** Glob `previous-exams/<year>_FE/` for the MCQ pair using regex that tolerates filename drift (`_AM_Questions.pdf`, `_FE-A_Questions.pdf`, `Answer` / `Answers`, older `2007Oct_` prefixes, etc.).
+2. **Parse answers.** Load the answer PDF, concatenate text across pages, extract `(?:Q)?(\d+)\.?\s+([a-d])` pairs into a `Map<number, ChoiceId>`.
+3. **Find question markers.** For each page of the questions PDF, use `pdfjs-dist` `getTextContent()` to find items matching `^Q\d+\.?$` whose `transform[4]` (x-coord) is in the left 15% of the page. Collect `{ questionNo, page, yTop }`.
+4. **Render pages.** Each page rendered at 2× scale via `@napi-rs/canvas`, compressed to PNG by `sharp`.
+5. **Crop per question.** For each marker, crop from its y-coord down to the next marker's y-coord (with `PAD_TOP = 40` px above the baseline to capture the full `Q<n>.` line). When the next marker is on a later page, slices are stitched vertically.
+6. **Emit outputs.** Write `public/questions/<examId>_NN.png`, per-exam `src/data/questions/<examId>.json`, then regenerate `src/data/questions.ts` by concatenating every `*.json` under `src/data/questions/` into a single typed `QUESTIONS` constant.
+
+The pipeline is deterministic — re-running overwrites in place. The aggregate TS file carries an `AUTO-GENERATED` banner with the regeneration timestamp and the list of source exams.
+
+### Coverage
+
+- **AM / A-set only** (MCQ papers). `PM` and `B-set` are out of scope.
+- Older years (≤ 2023) have 80 questions; 2024+ Subject A has 60 questions.
+
+## Session state
+
+In-memory only (no persistence). Lives in `src/components/session/session-runner.tsx` via React state.
 
 ```ts
-type Mode = "practice" | "exam"
+type SessionMode = "practice" | "exam"
 
-type Session = {
-  id: string // uuid, generated at start
-  mode: Mode
-  startedAt: number // epoch ms
-  finishedAt?: number
-  topics: Topic[] // filter used to build the pool
-  questionIds: string[] // the ordered pool
-  answers: Record<string, AnsweredQuestion> // keyed by questionId
-  seed?: number // for reproducible ordering
-}
+// Keyed by question.id
+type AnswerMap = Record<string, ChoiceId | undefined>
 
-type AnsweredQuestion = {
-  questionId: string
-  chosenId: string | null // null = skipped
-  correct: boolean
-  answeredAt: number
+// Runner state (conceptual)
+interface SessionState {
+  mode: SessionMode
+  questions: readonly Question[]
+  index: number // current position
+  answers: AnswerMap // user picks
+  revealed: Record<string, true | undefined> // practice-mode reveals
+  flagged: Set<string> // user-flagged ids
+  submitted: boolean
+  startedAt: number | null // exam mode only
 }
 ```
 
 ### Mode differences
 
-| Aspect             | Practice                      | Exam                                |
-| ------------------ | ----------------------------- | ----------------------------------- |
-| Feedback timing    | Immediately after each answer | Only after the full session ends    |
-| Timer              | None                          | Fixed duration (configurable later) |
-| Skipping           | Allowed, can revisit          | Allowed, can revisit until submit   |
-| Explanations shown | Inline                        | In the review screen                |
+| Aspect          | Practice                                                   | Exam                                     |
+| --------------- | ---------------------------------------------------------- | ---------------------------------------- |
+| Feedback timing | Configurable: instant or on demand (`R`)                   | Only on the results screen               |
+| Timer           | None                                                       | Fixed duration (`durationMinutes`)       |
+| Skipping        | Allowed, revisit freely                                    | Allowed, revisit until submit            |
+| Visual cue      | Chosen button is outlined; revealed button tints red/green | Chosen button outlined only until submit |
 
-## Persisted state (localStorage)
+## Topics
 
-Single root key: `philnits-vault:v1`. Schema is versioned so a future migration is straightforward.
-
-```ts
-type PersistedState = {
-  version: 1
-  settings: {
-    lastMode?: Mode
-    preferredTopics?: Topic[]
-    theme?: "light" | "dark" | "system"
-  }
-  history: SessionSummary[] // completed sessions, newest first
-  wrongLog: WrongEntry[] // deduped by questionId, newest wins
-}
-
-type SessionSummary = {
-  id: string
-  mode: Mode
-  startedAt: number
-  finishedAt: number
-  topics: Topic[]
-  total: number // question count
-  correct: number
-}
-
-type WrongEntry = {
-  questionId: string
-  lastMissedAt: number
-  missCount: number
-}
-```
-
-Notes:
-
-- Storage writes happen **only** at session end (or explicit settings change), not on every answer — avoids tearing in private windows and keeps the hot path fast.
-- `wrongLog` powers the "revisit mistakes" review flow.
+`src/lib/topics.ts` exports `TopicId` (string union) and `TOPICS` (labelled metadata). Current ingestion output assigns every question to the `"uncategorized"` topic; real topic assignment is a manual backfill step. The topic picker shows "Uncategorized" so sessions can still filter to the ingested bank.
 
 ## Validation
 
-- Question bank is validated at build time; a malformed markdown file fails the build loudly in development. In production the generated index is already trusted.
-- Persisted state is validated on read; any schema mismatch resets to a fresh default rather than crashing.
+- Ingestion logs a warning if the parsed answer count ≠ marker count, or if a question has no mapped answer (that question is skipped, not written).
+- Runtime: `src/lib/questions.ts` filters out entries whose `topic` isn't a known `TopicId`. An unknown topic in the JSON therefore silently drops the question — keep `TopicId` in sync with the topics your data uses.

@@ -22,14 +22,24 @@ git config core.hooksPath   # should print ".husky"
 
 ## Day-to-day scripts
 
-| Command             | What it does                      |
-| ------------------- | --------------------------------- |
-| `bun run dev`       | Next.js dev server (Turbopack)    |
-| `bun run build`     | Production build                  |
-| `bun run start`     | Serve the production build        |
-| `bun run lint`      | ESLint on the repo                |
-| `bun run format`    | Prettier write on `**/*.{ts,tsx}` |
-| `bun run typecheck` | `tsc --noEmit`                    |
+| Command                      | What it does                                    |
+| ---------------------------- | ----------------------------------------------- |
+| `bun run dev`                | Next.js dev server (Turbopack)                  |
+| `bun run build`              | Production build                                |
+| `bun run start`              | Serve the production build                      |
+| `bun run lint`               | ESLint on the repo                              |
+| `bun run format`             | Prettier write on `**/*.{ts,tsx}`               |
+| `bun run typecheck`          | `tsc --noEmit`                                  |
+| `bun run ingest:year <year>` | Ingest one exam year's PDFs → PNGs + typed bank |
+
+### Ingesting a year
+
+```bash
+bun run ingest:year 2025A    # writes public/questions/2025A_FE_AM_*.png
+                              # and regenerates src/data/questions.ts
+```
+
+`<year>` matches `YYYY[AS]` (e.g. `2025A`, `2022S`, `2010S`) and resolves to the matching folder under `previous-exams/`. Re-running overwrites in place. See [data-model.md](./data-model.md) for pipeline details.
 
 ## Git workflow
 
@@ -55,9 +65,11 @@ A commit is rejected if any step fails. Fix the underlying issue and re-commit �
 
 - Routes → `src/app/`
 - UI components → `src/components/`
-- Hooks → `src/hooks/`
 - Pure logic / utilities → `src/lib/`
-- Static question bank (markdown, one question per file) → `data/`
+- Source PDFs (input to the ingest pipeline) → `previous-exams/`
+- Ingestion pipeline → `scripts/` (entry: `scripts/ingest-year.ts`)
+- Per-question images (generated) → `public/questions/`
+- Typed question bank (generated) → `src/data/questions.ts` + `src/data/questions/*.json`
 - Docs (this folder) → `docs/`
 
 See [architecture.md](./architecture.md) for the full picture.

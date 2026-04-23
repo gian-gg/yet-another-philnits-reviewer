@@ -1,6 +1,7 @@
 export type CategoryId = "technology" | "management" | "strategy"
 
 export type TopicId =
+  | "uncategorized"
   | "number-systems"
   | "applied-math"
   | "discrete-math"
@@ -43,6 +44,12 @@ export const CATEGORIES: readonly Category[] = [
 ] as const
 
 export const TOPICS: readonly Topic[] = [
+  {
+    id: "uncategorized",
+    label: "Uncategorized",
+    description: "Not yet classified",
+    category: "technology",
+  },
   {
     id: "number-systems",
     label: "Number Systems & Data Representation",
