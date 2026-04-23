@@ -305,7 +305,7 @@ export function SessionRunner({
                   type="button"
                   aria-label="Open question list"
                   title="Open question list (L)"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-[11px] tracking-wide text-muted-foreground uppercase transition-colors hover:bg-muted/50 hover:text-foreground xl:hidden"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-[11px] tracking-wide text-muted-foreground uppercase transition-colors hover:bg-muted/50 hover:text-foreground"
                 >
                   <List className="size-3" aria-hidden />
                   List
@@ -394,22 +394,7 @@ export function SessionRunner({
         </div>
       </div>
 
-      <div className="mx-auto grid w-full grid-cols-1 px-4 sm:px-6 xl:grid-cols-[1fr_minmax(0,48rem)_1fr] xl:gap-6">
-        <aside
-          aria-label="Question navigator"
-          className="hidden self-start pt-16 xl:block xl:justify-self-center"
-        >
-          <div className="sticky top-24 w-20">
-            <QuestionNav
-              questions={questions}
-              currentIndex={index}
-              answers={answers}
-              flagged={flagged}
-              onJump={goTo}
-            />
-          </div>
-        </aside>
-
+      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6">
         <div className="min-w-0 pt-3">
           <div className="flex items-center justify-between gap-3">
             <Button
@@ -595,7 +580,7 @@ export function SessionRunner({
                 <Kbd>F</Kbd>
                 <span>flag</span>
               </span>
-              <span className="inline-flex items-center gap-1 xl:hidden">
+              <span className="inline-flex items-center gap-1">
                 <Kbd>L</Kbd>
                 <span>list</span>
               </span>
@@ -608,8 +593,6 @@ export function SessionRunner({
             </div>
           </div>
         </div>
-
-        <div aria-hidden className="hidden xl:block" />
       </div>
 
       {/* Bottom sticky bar */}
