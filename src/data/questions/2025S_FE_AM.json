@@ -21,25 +21,25 @@
     "id": "2025S_FE_AM_04",
     "topic": "computer-architecture",
     "image": "/2025/spring/04.avif",
-    "answer": "a"
+    "answer": "c"
   },
   {
     "id": "2025S_FE_AM_05",
     "topic": "discrete-math",
     "image": "/2025/spring/05.avif",
-    "answer": "c"
+    "answer": "d"
   },
   {
     "id": "2025S_FE_AM_06",
     "topic": "discrete-math",
     "image": "/2025/spring/06.avif",
-    "answer": "c"
+    "answer": "d"
   },
   {
     "id": "2025S_FE_AM_07",
     "topic": "discrete-math",
     "image": "/2025/spring/07.avif",
-    "answer": "b"
+    "answer": "a"
   },
   {
     "id": "2025S_FE_AM_08",
@@ -117,7 +117,7 @@
     "id": "2025S_FE_AM_20",
     "topic": "databases",
     "image": "/2025/spring/20.avif",
-    "answer": "b"
+    "answer": "d"
   },
   {
     "id": "2025S_FE_AM_21",
@@ -171,13 +171,13 @@
     "id": "2025S_FE_AM_29",
     "topic": "emerging-tech",
     "image": "/2025/spring/29.avif",
-    "answer": "c"
+    "answer": "b"
   },
   {
     "id": "2025S_FE_AM_30",
     "topic": "cybersecurity",
     "image": "/2025/spring/30.avif",
-    "answer": "b"
+    "answer": "d"
   },
   {
     "id": "2025S_FE_AM_31",
@@ -219,7 +219,7 @@
     "id": "2025S_FE_AM_37",
     "topic": "software-testing",
     "image": "/2025/spring/37.avif",
-    "answer": "c"
+    "answer": "d"
   },
   {
     "id": "2025S_FE_AM_38",
@@ -345,7 +345,7 @@
     "id": "2025S_FE_AM_58",
     "topic": "quality-management",
     "image": "/2025/spring/58.avif",
-    "answer": "c"
+    "answer": "b"
   },
   {
     "id": "2025S_FE_AM_59",
@@ -357,6 +357,6 @@
     "id": "2025S_FE_AM_60",
     "topic": "corporate-finance",
     "image": "/2025/spring/60.avif",
-    "answer": "a"
+    "answer": "b"
   }
 ]
