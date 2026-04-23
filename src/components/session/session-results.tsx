@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import { copyImageToClipboard } from "@/lib/copy-image"
 import { resolveImageUrl } from "@/lib/image"
 
 import { QuestionImage } from "./question-image"
@@ -314,11 +315,7 @@ function AskAiRow({ question }: { question: Question }) {
 
   const copyImage = useCallback(async () => {
     try {
-      const res = await fetch(resolveImageUrl(question.image))
-      const blob = await res.blob()
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type || "image/avif"]: blob }),
-      ])
+      await copyImageToClipboard(resolveImageUrl(question.image))
       flash("image")
     } catch (err) {
       console.error("copy image failed", err)
