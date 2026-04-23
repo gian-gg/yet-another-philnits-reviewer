@@ -11,6 +11,8 @@ import {
   Eye,
   EyeOff,
   Flag,
+  ImageIcon,
+  Sparkles,
   XCircle,
 } from "lucide-react"
 
@@ -116,6 +118,36 @@ export function SessionRunner({
     if (answers[current.id] == null) return
     setRevealed((prev) => ({ ...prev, [current.id]: true }))
   }, [current, mode, answers])
+
+  const [copiedKind, setCopiedKind] = useState<"image" | "prompt" | null>(null)
+  const flashCopied = useCallback((kind: "image" | "prompt") => {
+    setCopiedKind(kind)
+    window.setTimeout(() => setCopiedKind((k) => (k === kind ? null : k)), 1500)
+  }, [])
+
+  const copyQuestionImage = useCallback(async () => {
+    if (!current) return
+    try {
+      const res = await fetch(current.image)
+      const blob = await res.blob()
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type || "image/png"]: blob }),
+      ])
+      flashCopied("image")
+    } catch (err) {
+      console.error("copy image failed", err)
+    }
+  }, [current, flashCopied])
+
+  const copyAskPrompt = useCallback(async () => {
+    if (!current) return
+    try {
+      await navigator.clipboard.writeText(buildAskAiPrompt(current))
+      flashCopied("prompt")
+    } catch (err) {
+      console.error("copy prompt failed", err)
+    }
+  }, [current, flashCopied])
 
   const toggleFeedbackMode = useCallback(() => {
     setFeedbackMode((prev) => (prev === "instant" ? "deferred" : "instant"))
@@ -459,6 +491,37 @@ export function SessionRunner({
               </div>
             )}
 
+            {isRevealed && (
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-card/50 px-4 py-3">
+                <p className="text-xs text-muted-foreground sm:text-sm">
+                  Want a breakdown? Copy the image and the prompt, then paste
+                  both into your chatbot.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={copyQuestionImage}
+                    title="Copy question image to clipboard"
+                  >
+                    <ImageIcon data-icon="inline-start" aria-hidden />
+                    {copiedKind === "image" ? "Copied image" : "Copy image"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={copyAskPrompt}
+                    title="Copy ask-AI prompt to clipboard"
+                  >
+                    <Sparkles data-icon="inline-start" aria-hidden />
+                    {copiedKind === "prompt" ? "Copied prompt" : "Copy prompt"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 hidden flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground sm:flex">
               <span className="font-mono tracking-widest uppercase">Keys</span>
               <span className="inline-flex items-center gap-1">
@@ -708,4 +771,10 @@ function formatTime(ms: number): string {
   const m = Math.floor(totalSec / 60)
   const s = totalSec % 60
   return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+function buildAskAiPrompt(q: Question): string {
+  return `Attached is a multiple-choice question (choices a, b, c, d). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
+
+(ref: ${q.id})`
 }

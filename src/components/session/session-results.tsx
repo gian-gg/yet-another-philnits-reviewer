@@ -1,8 +1,9 @@
 "use client"
 
+import { useCallback, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { CheckCircle2, Flag, XCircle } from "lucide-react"
+import { CheckCircle2, Flag, ImageIcon, Sparkles, XCircle } from "lucide-react"
 
 import {
   Accordion,
@@ -10,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
@@ -292,6 +294,8 @@ export function SessionResults({
                       )
                     })}
                   </ul>
+
+                  <AskAiRow question={q} />
                 </AccordionContent>
               </AccordionItem>
             )
@@ -300,6 +304,73 @@ export function SessionResults({
       </section>
     </main>
   )
+}
+
+function AskAiRow({ question }: { question: Question }) {
+  const [copiedKind, setCopiedKind] = useState<"image" | "prompt" | null>(null)
+
+  const flash = useCallback((kind: "image" | "prompt") => {
+    setCopiedKind(kind)
+    window.setTimeout(() => setCopiedKind((k) => (k === kind ? null : k)), 1500)
+  }, [])
+
+  const copyImage = useCallback(async () => {
+    try {
+      const res = await fetch(question.image)
+      const blob = await res.blob()
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type || "image/png"]: blob }),
+      ])
+      flash("image")
+    } catch (err) {
+      console.error("copy image failed", err)
+    }
+  }, [question.image, flash])
+
+  const copyPrompt = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(buildAskAiPrompt(question))
+      flash("prompt")
+    } catch (err) {
+      console.error("copy prompt failed", err)
+    }
+  }, [question, flash])
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed bg-card/50 px-3 py-2">
+      <p className="text-[11px] text-muted-foreground">
+        Want a breakdown? Paste both into your chatbot.
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Button
+          type="button"
+          size="xs"
+          variant="outline"
+          onClick={copyImage}
+          title="Copy question image to clipboard"
+        >
+          <ImageIcon data-icon="inline-start" aria-hidden />
+          {copiedKind === "image" ? "Copied image" : "Copy image"}
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant="outline"
+          onClick={copyPrompt}
+          title="Copy ask-AI prompt to clipboard"
+        >
+          <Sparkles data-icon="inline-start" aria-hidden />
+          {copiedKind === "prompt" ? "Copied prompt" : "Copy prompt"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function buildAskAiPrompt(q: Question): string {
+  return `Attached is a multiple-choice question (choices a, b, c, d). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
+
+(ref: ${q.id})`
 }
 
 function headline(pct: number): string {
