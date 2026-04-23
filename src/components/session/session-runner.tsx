@@ -12,6 +12,7 @@ import {
   EyeOff,
   Flag,
   ImageIcon,
+  List,
   Sparkles,
   XCircle,
 } from "lucide-react"
@@ -27,6 +28,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
 import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
@@ -72,6 +80,7 @@ export function SessionRunner({
   const [feedbackMode, setFeedbackMode] =
     useState<PracticeFeedbackMode>("deferred")
   const [timerHidden, setTimerHidden] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
 
   const total = questions.length
   const current = questions[index]
@@ -240,6 +249,7 @@ export function SessionRunner({
       else if (key === "arrowright" || key === "]" || key === "enter") goNext()
       else if (key === "f") toggleFlag()
       else if (key === "r") revealCurrent()
+      else if (key === "l") setNavOpen((v) => !v)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
@@ -289,6 +299,48 @@ export function SessionRunner({
             {modeLabel}
           </span>
           <span className="ml-auto flex items-center gap-3 font-mono text-xs tabular-nums">
+            <Sheet open={navOpen} onOpenChange={setNavOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Open question list"
+                  title="Open question list (L)"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-[11px] tracking-wide text-muted-foreground uppercase transition-colors hover:bg-muted/50 hover:text-foreground xl:hidden"
+                >
+                  <List className="size-3" aria-hidden />
+                  List
+                </button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetTitle className="sr-only">Questions</SheetTitle>
+                <div className="flex h-full flex-col">
+                  <div className="flex items-center justify-between border-b px-4 py-3">
+                    <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+                      Questions · {answeredCount}/{total}
+                    </span>
+                    <SheetClose
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                      aria-label="Close"
+                    >
+                      Close
+                    </SheetClose>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-3">
+                    <QuestionNav
+                      questions={questions}
+                      currentIndex={index}
+                      answers={answers}
+                      flagged={flagged}
+                      onJump={(i) => {
+                        goTo(i)
+                        setNavOpen(false)
+                      }}
+                      variant="grid"
+                    />
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
             <span className="text-muted-foreground">
               <span className="text-foreground">{index + 1}</span>
               <span className="text-muted-foreground/50">
@@ -543,6 +595,10 @@ export function SessionRunner({
                 <Kbd>F</Kbd>
                 <span>flag</span>
               </span>
+              <span className="inline-flex items-center gap-1 xl:hidden">
+                <Kbd>L</Kbd>
+                <span>list</span>
+              </span>
               {mode === "practice" && (
                 <span className="inline-flex items-center gap-1">
                   <Kbd>R</Kbd>
@@ -709,6 +765,7 @@ interface QuestionNavProps {
   answers: AnswerMap
   flagged: ReadonlySet<string>
   onJump: (index: number) => void
+  variant?: "sidebar" | "grid"
 }
 
 function QuestionNav({
@@ -717,10 +774,19 @@ function QuestionNav({
   answers,
   flagged,
   onJump,
+  variant = "sidebar",
 }: QuestionNavProps) {
+  const isGrid = variant === "grid"
   return (
     <nav aria-label="Question navigator">
-      <ol className="max-h-[70dvh] space-y-px overflow-y-auto" role="list">
+      <ol
+        className={cn(
+          isGrid
+            ? "grid grid-cols-5 gap-1.5"
+            : "max-h-[70dvh] space-y-px overflow-y-auto"
+        )}
+        role="list"
+      >
         {questions.map((q, i) => {
           const isCurrent = i === currentIndex
           const answered = answers[q.id] != null
@@ -733,19 +799,31 @@ function QuestionNav({
                 onClick={() => onJump(i)}
                 aria-current={isCurrent ? "step" : undefined}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1 text-left font-mono text-[11px] tabular-nums transition-colors",
+                  "flex w-full items-center gap-2 rounded-md text-left font-mono tabular-nums transition-colors",
                   "focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:outline-none",
+                  isGrid
+                    ? "justify-center border px-2 py-2 text-sm"
+                    : "justify-between px-2 py-1 text-[11px]",
                   isCurrent
-                    ? "bg-accent text-foreground"
+                    ? isGrid
+                      ? "border-foreground bg-accent text-foreground"
+                      : "bg-accent text-foreground"
                     : answered
-                      ? "text-foreground/75 hover:bg-accent/50 hover:text-foreground"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      ? isGrid
+                        ? "border-border/60 bg-accent/30 text-foreground/85 hover:bg-accent/60 hover:text-foreground"
+                        : "text-foreground/75 hover:bg-accent/50 hover:text-foreground"
+                      : isGrid
+                        ? "border-border/40 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+                        : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                 )}
               >
                 <span>{String(i + 1).padStart(2, "0")}</span>
                 {isFlaggedItem && (
                   <Flag
-                    className="size-2.5 shrink-0 text-muted-foreground"
+                    className={cn(
+                      "shrink-0 text-muted-foreground",
+                      isGrid ? "size-3" : "size-2.5"
+                    )}
                     aria-label="Flagged"
                   />
                 )}
