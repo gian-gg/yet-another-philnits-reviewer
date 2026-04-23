@@ -76,6 +76,47 @@ function shuffle<T>(arr: readonly T[], rand: () => number): T[] {
   return out
 }
 
+// ---------- Available exams ----------
+
+export interface ExamSummary {
+  id: string
+  label: string
+  questionCount: number
+}
+
+const SEASON_LABEL: Record<string, string> = {
+  S: "Spring",
+  A: "Autumn",
+}
+
+function formatExamLabel(examId: string): string {
+  // examId pattern: <year><season>_<level>_<session>, e.g. 2025A_FE_AM
+  const match = /^(\d{4})([A-Z])_([A-Z]+)_([A-Z]+)$/.exec(examId)
+  if (!match) return examId
+  const [, year, season, level, session] = match
+  const seasonLabel = SEASON_LABEL[season] ?? season
+  return `${year} ${seasonLabel} · ${level} ${session}`
+}
+
+const AVAILABLE_EXAMS: readonly ExamSummary[] = (() => {
+  const counts = new Map<string, number>()
+  for (const q of BANK) {
+    const examId = q.id.replace(/_\d+$/, "")
+    counts.set(examId, (counts.get(examId) ?? 0) + 1)
+  }
+  return Array.from(counts.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([id, questionCount]) => ({
+      id,
+      label: formatExamLabel(id),
+      questionCount,
+    }))
+})()
+
+export function getAvailableExams(): readonly ExamSummary[] {
+  return AVAILABLE_EXAMS
+}
+
 // ---------- Public API ----------
 
 export function getQuestions({

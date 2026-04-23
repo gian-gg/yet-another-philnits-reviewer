@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { ExamBankStatus } from "@/components/landing/exam-bank-status"
 import { LandingHero } from "@/components/landing/landing-hero"
 import { ModeGrid } from "@/components/landing/mode-grid"
 
@@ -16,6 +17,7 @@ export default function Page() {
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center px-6 py-16">
       <LandingHero />
       <ModeGrid />
+      <ExamBankStatus />
 
       <footer className="mt-16 flex flex-col items-center gap-2 text-[11px] text-muted-foreground">
         <p>
