@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { CheckCircle2, Flag, XCircle } from "lucide-react"
 
 import {
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
-import type { ChoiceId, Question } from "@/lib/questions"
+import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
 
 const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
   TOPICS.map((t) => [t.id, t.label])
@@ -34,7 +35,7 @@ export function SessionResults({
 }: SessionResultsProps) {
   const total = questions.length
   const correct = questions.reduce(
-    (acc, q) => (answers[q.id] === q.answerId ? acc + 1 : acc),
+    (acc, q) => (answers[q.id] === q.answer ? acc + 1 : acc),
     0
   )
   const answered = questions.reduce(
@@ -47,7 +48,7 @@ export function SessionResults({
   for (const q of questions) {
     const bucket = byTopic.get(q.topic) ?? { total: 0, correct: 0 }
     bucket.total++
-    if (answers[q.id] === q.answerId) bucket.correct++
+    if (answers[q.id] === q.answer) bucket.correct++
     byTopic.set(q.topic, bucket)
   }
 
@@ -168,7 +169,7 @@ export function SessionResults({
         <Accordion type="multiple" className="space-y-2">
           {questions.map((q, i) => {
             const chosen = answers[q.id]
-            const ok = chosen === q.answerId
+            const ok = chosen === q.answer
             const skipped = chosen == null
             const isFlagged = flagged.has(q.id)
             return (
@@ -189,8 +190,8 @@ export function SessionResults({
                   </span>
                   <span className="flex min-w-0 flex-1 items-start gap-2">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm leading-snug">
-                        {q.prompt}
+                      <span className="block truncate font-mono text-xs text-foreground">
+                        {q.id}
                       </span>
                       <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                         <span>{TOPIC_LABEL[q.topic] ?? q.topic}</span>
@@ -214,7 +215,7 @@ export function SessionResults({
                         <span>
                           Correct:{" "}
                           <span className="font-mono text-foreground uppercase">
-                            {q.answerId}
+                            {q.answer}
                           </span>
                         </span>
                         {isFlagged && (
@@ -247,62 +248,50 @@ export function SessionResults({
                   )}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-sm leading-snug">{q.prompt}</p>
+                  <div className="relative w-full overflow-hidden rounded-lg border bg-card">
+                    <Image
+                      src={q.image}
+                      alt={`Question ${q.id}`}
+                      width={1200}
+                      height={1600}
+                      className="h-auto max-h-[50vh] w-full object-contain"
+                    />
+                  </div>
 
-                  <ul className="mt-3 space-y-1.5" role="list">
-                    {q.choices.map((choice) => {
-                      const isAnswer = choice.id === q.answerId
-                      const isChosen = choice.id === chosen
+                  <ul
+                    className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4"
+                    role="list"
+                  >
+                    {CHOICE_IDS.map((choiceId) => {
+                      const isAnswer = choiceId === q.answer
+                      const isChosen = choiceId === chosen
                       return (
                         <li
-                          key={choice.id}
+                          key={choiceId}
                           className={cn(
-                            "flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-xs",
+                            "flex items-center justify-center gap-1.5 rounded-md border px-2 py-2 font-mono text-sm font-semibold uppercase",
                             isAnswer
-                              ? "border-emerald-500/40 bg-emerald-500/5"
+                              ? "border-emerald-500/60 bg-emerald-500/10 text-foreground"
                               : isChosen
-                                ? "border-destructive/40 bg-destructive/5"
-                                : "border-border/60 bg-transparent"
+                                ? "border-destructive/60 bg-destructive/10 text-foreground"
+                                : "border-border/60 text-muted-foreground"
                           )}
                         >
-                          <span
-                            className={cn(
-                              "grid size-5 shrink-0 place-items-center rounded-sm border font-mono text-[10px] uppercase",
-                              isAnswer
-                                ? "border-emerald-500 bg-emerald-500 text-white"
-                                : isChosen
-                                  ? "border-destructive bg-destructive text-white"
-                                  : "border-border text-muted-foreground"
-                            )}
-                          >
-                            {choice.id}
-                          </span>
-                          <span className="min-w-0 flex-1">{choice.text}</span>
+                          <span>{choiceId}</span>
                           {isAnswer && (
-                            <span className="shrink-0 font-mono text-[10px] text-emerald-600 uppercase dark:text-emerald-400">
+                            <span className="font-sans text-[9px] font-normal tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
                               correct
                             </span>
                           )}
                           {!isAnswer && isChosen && (
-                            <span className="shrink-0 font-mono text-[10px] text-destructive uppercase">
-                              your pick
+                            <span className="font-sans text-[9px] font-normal tracking-widest text-destructive uppercase">
+                              yours
                             </span>
                           )}
                         </li>
                       )
                     })}
                   </ul>
-
-                  {q.explanation && (
-                    <div className="mt-3 rounded-md border-l-2 border-muted-foreground/30 bg-muted/30 px-3 py-2">
-                      <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-                        Why
-                      </p>
-                      <p className="mt-1 text-sm text-foreground/85">
-                        {q.explanation}
-                      </p>
-                    </div>
-                  )}
                 </AccordionContent>
               </AccordionItem>
             )

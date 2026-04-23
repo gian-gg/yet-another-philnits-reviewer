@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,7 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
-import type { ChoiceId, Question } from "@/lib/questions"
+import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
 
 import { SessionResults } from "./session-results"
 
@@ -73,7 +74,6 @@ export function SessionRunner({
   const total = questions.length
   const current = questions[index]
 
-  // Exam timer — startedAt is fixed once on mount.
   const [startedAt] = useState<number | null>(() =>
     mode === "exam" ? Date.now() : null
   )
@@ -91,8 +91,6 @@ export function SessionRunner({
       ? Math.max(0, durationMs - (now - startedAt))
       : null
 
-  // Auto-submit when the timer hits zero. Treat the view as submitted without
-  // needing an effect+setState round-trip.
   const timedOut = mode === "exam" && msRemaining === 0
   const isFinished = submitted || timedOut
 
@@ -179,19 +177,16 @@ export function SessionRunner({
     submit()
   }, [submit])
 
-  // Warn on refresh / close when progress exists.
   useEffect(() => {
     if (isFinished || answeredCount === 0) return
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault()
-      // Required by some browsers to trigger the prompt.
       e.returnValue = ""
     }
     window.addEventListener("beforeunload", handler)
     return () => window.removeEventListener("beforeunload", handler)
   }, [isFinished, answeredCount])
 
-  // Keyboard shortcuts
   useEffect(() => {
     if (isFinished) return
     const onKey = (e: KeyboardEvent) => {
@@ -234,7 +229,6 @@ export function SessionRunner({
 
   const chosen = answers[current.id]
   const isRevealed = mode === "practice" && revealed[current.id] === true
-  const isCorrect = chosen != null && chosen === current.answerId
   const isFlagged = flagged.has(current.id)
   const progressPct = ((index + 1) / total) * 100
   const canReveal =
@@ -384,27 +378,38 @@ export function SessionRunner({
               </span>
             </div>
 
-            <h1 className="font-heading text-lg leading-snug font-semibold tracking-tight sm:text-xl">
-              {current.prompt}
-            </h1>
+            <div className="relative w-full overflow-hidden rounded-lg border bg-card">
+              <Image
+                key={current.id}
+                src={current.image}
+                alt={`Question ${current.id}`}
+                width={1200}
+                height={1600}
+                priority
+                className="h-auto max-h-[55vh] w-full object-contain"
+              />
+            </div>
 
-            <ul className="mt-6 space-y-2" role="list">
-              {current.choices.map((choice) => {
-                const isChosen = chosen === choice.id
-                const isAnswer = current.answerId === choice.id
+            <ul
+              className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
+              role="list"
+            >
+              {CHOICE_IDS.map((choiceId) => {
+                const isChosen = chosen === choiceId
+                const isAnswer = current.answer === choiceId
                 const showAsCorrect = isRevealed && isAnswer
                 const showAsWrong = isRevealed && isChosen && !isAnswer
 
                 return (
-                  <li key={choice.id}>
+                  <li key={choiceId}>
                     <button
                       type="button"
-                      onClick={() => selectChoice(choice.id)}
+                      onClick={() => selectChoice(choiceId)}
                       disabled={isRevealed}
                       aria-pressed={isChosen}
-                      title={`Press ${choice.id.toUpperCase()}`}
+                      title={`Press ${choiceId.toUpperCase()}`}
                       className={cn(
-                        "group flex w-full items-start gap-3 rounded-lg border bg-card px-4 py-3 text-left transition-colors",
+                        "flex w-full items-center justify-center gap-2 rounded-lg border bg-card px-4 py-4 font-mono text-lg font-semibold uppercase transition-colors",
                         "hover:bg-accent/40 disabled:cursor-default disabled:hover:bg-card",
                         "focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
                         isChosen &&
@@ -416,34 +421,16 @@ export function SessionRunner({
                           "border-destructive/60 bg-destructive/10 text-foreground"
                       )}
                     >
-                      <span
-                        className={cn(
-                          "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border font-mono text-xs uppercase",
-                          isChosen &&
-                            !isRevealed &&
-                            "border-foreground bg-foreground text-background",
-                          showAsCorrect &&
-                            "border-emerald-500 bg-emerald-500 text-white",
-                          showAsWrong &&
-                            "border-destructive bg-destructive text-white"
-                        )}
-                      >
-                        {choice.id}
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="text-sm leading-snug sm:text-base">
-                          {choice.text}
-                        </span>
-                      </span>
+                      <span>{choiceId}</span>
                       {showAsCorrect && (
                         <CheckCircle2
-                          className="size-5 shrink-0 text-emerald-500"
+                          className="size-4 text-emerald-500"
                           aria-hidden
                         />
                       )}
                       {showAsWrong && (
                         <XCircle
-                          className="size-5 shrink-0 text-destructive"
+                          className="size-4 text-destructive"
                           aria-hidden
                         />
                       )}
@@ -456,8 +443,8 @@ export function SessionRunner({
             {canReveal && (
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed bg-card/50 px-4 py-3">
                 <p className="text-xs text-muted-foreground sm:text-sm">
-                  Commit when you&apos;re ready — reveal the correct choice and
-                  explanation. You can still change your pick until you reveal.
+                  Commit when you&apos;re ready — reveal the correct choice. You
+                  can still change your pick until you reveal.
                 </p>
                 <Button
                   type="button"
@@ -469,42 +456,6 @@ export function SessionRunner({
                   Reveal answer
                   <Kbd>R</Kbd>
                 </Button>
-              </div>
-            )}
-
-            {isRevealed && (
-              <div
-                className={cn(
-                  "mt-6 rounded-lg border p-4",
-                  isCorrect
-                    ? "border-emerald-500/40 bg-emerald-500/5"
-                    : "border-destructive/40 bg-destructive/5"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  {isCorrect ? (
-                    <CheckCircle2
-                      className="size-4 text-emerald-500"
-                      aria-hidden
-                    />
-                  ) : (
-                    <XCircle className="size-4 text-destructive" aria-hidden />
-                  )}
-                  <span className="text-sm font-medium">
-                    {isCorrect ? "Correct." : "Not quite."}
-                  </span>
-                  {!isCorrect && (
-                    <span className="ml-1 text-sm text-muted-foreground">
-                      Answer:{" "}
-                      <span className="font-mono text-foreground uppercase">
-                        {current.answerId}
-                      </span>
-                    </span>
-                  )}
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {current.explanation}
-                </p>
               </div>
             )}
 

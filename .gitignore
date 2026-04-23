@@ -18,6 +18,9 @@
 # production
 /build
 
+# local conversion source material
+/previous-exams/
+
 # misc
 .DS_Store
 *.pem
