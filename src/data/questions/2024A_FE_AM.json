@@ -25,37 +25,37 @@
   },
   {
     "id": "2024A_FE_AM_05",
-    "topic": "probability-and-statistics",
+    "topic": "applied-math",
     "image": "/2024/autumn/05.avif",
     "answer": "b"
   },
   {
     "id": "2024A_FE_AM_06",
-    "topic": "probability-and-statistics",
+    "topic": "applied-math",
     "image": "/2024/autumn/06.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_07",
-    "topic": "data-structures-and-algorithms",
+    "topic": "discrete-math",
     "image": "/2024/autumn/07.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_08",
-    "topic": "data-structures-and-algorithms",
+    "topic": "discrete-math",
     "image": "/2024/autumn/08.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_09",
-    "topic": "data-structures-and-algorithms",
+    "topic": "discrete-math",
     "image": "/2024/autumn/09.avif",
     "answer": "b"
   },
   {
     "id": "2024A_FE_AM_10",
-    "topic": "data-structures-and-algorithms",
+    "topic": "discrete-math",
     "image": "/2024/autumn/10.avif",
     "answer": "a"
   },
@@ -271,13 +271,13 @@
   },
   {
     "id": "2024A_FE_AM_46",
-    "topic": "it-strategy",
+    "topic": "system-strategy",
     "image": "/2024/autumn/46.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_47",
-    "topic": "it-strategy",
+    "topic": "system-strategy",
     "image": "/2024/autumn/47.avif",
     "answer": "a"
   },
@@ -289,43 +289,43 @@
   },
   {
     "id": "2024A_FE_AM_49",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/49.avif",
     "answer": "d"
   },
   {
     "id": "2024A_FE_AM_50",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/50.avif",
     "answer": "a"
   },
   {
     "id": "2024A_FE_AM_51",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/51.avif",
     "answer": "b"
   },
   {
     "id": "2024A_FE_AM_52",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/52.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_53",
-    "topic": "it-strategy",
+    "topic": "system-strategy",
     "image": "/2024/autumn/53.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_54",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/54.avif",
     "answer": "c"
   },
   {
     "id": "2024A_FE_AM_55",
-    "topic": "corporate-and-legal",
+    "topic": "business-strategy",
     "image": "/2024/autumn/55.avif",
     "answer": "a"
   },
@@ -337,7 +337,7 @@
   },
   {
     "id": "2024A_FE_AM_57",
-    "topic": "probability-and-statistics",
+    "topic": "applied-math",
     "image": "/2024/autumn/57.avif",
     "answer": "b"
   },
@@ -349,13 +349,13 @@
   },
   {
     "id": "2024A_FE_AM_59",
-    "topic": "corporate-and-legal",
+    "topic": "corporate-finance",
     "image": "/2024/autumn/59.avif",
     "answer": "b"
   },
   {
     "id": "2024A_FE_AM_60",
-    "topic": "corporate-and-legal",
+    "topic": "law-ip",
     "image": "/2024/autumn/60.avif",
     "answer": "b"
   }
