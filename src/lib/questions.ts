@@ -1,4 +1,4 @@
-import { isTopicId, type TopicId } from "./topics"
+import { CATEGORIES, isTopicId, TOPICS, type TopicId } from "./topics"
 import { QUESTIONS as questionsData } from "@/data/questions"
 
 export type ChoiceId = "a" | "b" | "c" | "d"
@@ -144,5 +144,67 @@ export function getQuestions({
       out.push({ ...base, id: `${base.id}-r${cycle}` })
     }
   }
+  return out
+}
+
+/**
+ * Build a mock-exam question list whose per-topic counts match `blueprint`,
+ * ordered by category (technology → management → strategy) so the result
+ * mirrors a real PhilNITS FE AM paper rather than a uniform random draw.
+ *
+ * Within each topic, questions are deterministically shuffled from the bank
+ * pool. Topics whose blueprint count exceeds the bank pool are padded with
+ * cycle-suffixed clones (same fallback used by `getQuestions`). Topics with
+ * zero bank questions are skipped with a console warning — the resulting
+ * paper is short by that many questions.
+ */
+export function getMockExamQuestions(
+  blueprint: Readonly<Record<TopicId, number>>,
+  seed: number = Date.now() & 0xffffffff
+): Question[] {
+  // Index bank by topic once.
+  const byTopic = new Map<TopicId, Question[]>()
+  for (const q of BANK) {
+    const arr = byTopic.get(q.topic)
+    if (arr) arr.push(q)
+    else byTopic.set(q.topic, [q])
+  }
+
+  // Stable category-ordered topic list: technology first, then management,
+  // then strategy, preserving TOPICS declaration order within each category.
+  const orderedTopics = CATEGORIES.flatMap((cat) =>
+    TOPICS.filter((t) => t.category === cat.id).map((t) => t.id)
+  )
+
+  const out: Question[] = []
+  let topicIndex = 0
+  for (const topic of orderedTopics) {
+    const want = blueprint[topic] ?? 0
+    if (want <= 0) continue
+
+    const pool = byTopic.get(topic) ?? []
+    if (pool.length === 0) {
+      console.warn(
+        `[mock-exam] no bank questions for topic "${topic}" (wanted ${want}); skipping`
+      )
+      continue
+    }
+
+    // Per-topic seed so reshuffling one topic doesn't cascade into others.
+    const rand = mulberry32(seed + topicIndex * 0x9e3779b1)
+    const shuffled = shuffle(pool, rand)
+
+    for (let i = 0; i < want; i++) {
+      const base = shuffled[i % shuffled.length]
+      if (i < shuffled.length) {
+        out.push(base)
+      } else {
+        const cycle = Math.floor(i / shuffled.length) + 1
+        out.push({ ...base, id: `${base.id}-r${cycle}` })
+      }
+    }
+    topicIndex++
+  }
+
   return out
 }

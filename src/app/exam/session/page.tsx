@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
-import { getQuestions } from "@/lib/questions"
+import { FE_AM_BLUEPRINT } from "@/lib/exam-blueprint"
+import { getMockExamQuestions } from "@/lib/questions"
 import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
 
@@ -10,7 +11,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-const EXAM_QUESTION_COUNT = 60
 const EXAM_DURATION_MINUTES = 90
 
 interface PageProps {
@@ -20,11 +20,10 @@ interface PageProps {
 export default async function Page({ searchParams }: PageProps) {
   const { seed: seedRaw } = await searchParams
   const seed = Number.parseInt(seedRaw ?? "", 10)
-  const questions = getQuestions({
-    topics: "all",
-    count: EXAM_QUESTION_COUNT,
-    seed: Number.isFinite(seed) ? seed : undefined,
-  })
+  const questions = getMockExamQuestions(
+    FE_AM_BLUEPRINT,
+    Number.isFinite(seed) ? seed : undefined
+  )
 
   if (questions.length === 0) {
     return <SessionEmpty modeLabel="Mock Exam" setupHref="/exam" topics="all" />

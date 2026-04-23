@@ -4,9 +4,18 @@ import { useRouter } from "next/navigation"
 import { ArrowRight, Clock, ListChecks, Layers } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  blueprintByCategory,
+  FE_AM_BLUEPRINT,
+  FE_AM_BLUEPRINT_TOTAL,
+} from "@/lib/exam-blueprint"
 
-const QUESTION_COUNT = 60
+const QUESTION_COUNT = FE_AM_BLUEPRINT_TOTAL
 const DURATION_MINUTES = 90
+const BLUEPRINT = blueprintByCategory(FE_AM_BLUEPRINT)
+const COVERAGE_SUMMARY = BLUEPRINT.map(
+  (row) => `${row.total} ${row.label.toLowerCase()}`
+).join(" · ")
 
 export function ExamSetup() {
   const router = useRouter()
@@ -43,8 +52,8 @@ export function ExamSetup() {
           <FactRow
             icon={<Layers className="size-4" aria-hidden />}
             label="Coverage"
-            value="All topics"
-            hint="No filtering — every topic is fair game."
+            value={COVERAGE_SUMMARY}
+            hint="Topic mix mirrors a real PhilNITS FE AM paper."
           />
         </div>
       </section>
@@ -73,6 +82,14 @@ export function ExamSetup() {
             className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/60"
           />
           A scored review with per-topic breakdown follows submission.
+        </li>
+        <li className="flex gap-2">
+          <span
+            aria-hidden
+            className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/60"
+          />
+          Topic distribution will become more accurate as more questions are
+          added to the bank.
         </li>
       </ul>
 
