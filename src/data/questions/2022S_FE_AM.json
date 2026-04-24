@@ -7,7 +7,7 @@
   },
   {
     "id": "2022S_FE_AM_02",
-    "topic": "digital-logic",
+    "topic": "number-systems",
     "image": "/2022/spring/02.avif",
     "answer": "a"
   },
@@ -37,25 +37,25 @@
   },
   {
     "id": "2022S_FE_AM_07",
-    "topic": "software-engineering",
+    "topic": "discrete-math",
     "image": "/2022/spring/07.avif",
     "answer": "d"
   },
   {
     "id": "2022S_FE_AM_08",
-    "topic": "software-engineering",
+    "topic": "discrete-math",
     "image": "/2022/spring/08.avif",
     "answer": "a"
   },
   {
     "id": "2022S_FE_AM_09",
-    "topic": "software-engineering",
+    "topic": "discrete-math",
     "image": "/2022/spring/09.avif",
     "answer": "c"
   },
   {
     "id": "2022S_FE_AM_10",
-    "topic": "software-engineering",
+    "topic": "discrete-math",
     "image": "/2022/spring/10.avif",
     "answer": "c"
   },
@@ -67,7 +67,7 @@
   },
   {
     "id": "2022S_FE_AM_12",
-    "topic": "operating-systems",
+    "topic": "computer-architecture",
     "image": "/2022/spring/12.avif",
     "answer": "b"
   },
@@ -85,13 +85,13 @@
   },
   {
     "id": "2022S_FE_AM_15",
-    "topic": "it-service-management",
+    "topic": "computer-architecture",
     "image": "/2022/spring/15.avif",
     "answer": "a"
   },
   {
     "id": "2022S_FE_AM_16",
-    "topic": "it-service-management",
+    "topic": "computer-architecture",
     "image": "/2022/spring/16.avif",
     "answer": "c"
   },
@@ -115,7 +115,7 @@
   },
   {
     "id": "2022S_FE_AM_20",
-    "topic": "emerging-tech",
+    "topic": "computer-architecture",
     "image": "/2022/spring/20.avif",
     "answer": "b"
   },
