@@ -12,12 +12,12 @@ export function PracticeHeader() {
         Back
       </Link>
       <div>
-        <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-          Practice
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Choose your topics.
+        <h1 className="font-mono text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+          practice-makes-perfect
         </h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+          pick your topics and practice at your own pace.
+        </p>
       </div>
     </header>
   )

@@ -12,12 +12,12 @@ export function ExamHeader() {
         Back
       </Link>
       <div>
-        <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-          Mock Exam
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Simulate the real thing.
+        <h1 className="font-mono text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+          simulate-the-real-thing
         </h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+          60 questions, 90-minute timer, scored at the end.
+        </p>
       </div>
     </header>
   )

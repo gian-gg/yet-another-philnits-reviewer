@@ -2,7 +2,14 @@
 
 import { useCallback, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, Flag, ImageIcon, Sparkles, XCircle } from "lucide-react"
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Flag,
+  ImageIcon,
+  Sparkles,
+  XCircle,
+} from "lucide-react"
 
 import {
   Accordion,
@@ -64,15 +71,18 @@ export function SessionResults({
           href={setupHref}
           className="inline-flex items-center gap-1.5 text-xs tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
         >
-          ← Back
+          <ArrowLeft className="size-3" aria-hidden />
+          Back
         </Link>
         <div>
-          <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-            {modeLabel} · Results
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="font-mono text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
             {headline(scorePct)}
           </h1>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+            {setupHref === "/exam"
+              ? "simulate-the-real-thing · results"
+              : "practice-makes-perfect · results"}
+          </p>
         </div>
       </header>
 
@@ -369,9 +379,9 @@ function buildAskAiPrompt(q: Question): string {
 }
 
 function headline(pct: number): string {
-  if (pct >= 90) return "Near perfect run."
-  if (pct >= 75) return "Strong session."
-  if (pct >= 60) return "Solid ground, a few gaps."
-  if (pct >= 40) return "Plenty to shore up."
-  return "Good signal — drill the weak spots."
+  if (pct >= 90) return "near-perfect-run"
+  if (pct >= 75) return "strong-session"
+  if (pct >= 60) return "solid-ground-few-gaps"
+  if (pct >= 40) return "plenty-to-shore-up"
+  return "drill-the-weak-spots"
 }
