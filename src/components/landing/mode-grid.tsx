@@ -8,7 +8,7 @@ export function ModeGrid() {
         index="01"
         label="Practice"
         meta="22 topics"
-        title="Topic practice"
+        title="practice"
         description="Drill by topic with immediate feedback after each question."
       />
       <ModeCard
@@ -16,7 +16,7 @@ export function ModeGrid() {
         index="02"
         label="Mock Exam"
         meta="60Q · 90m"
-        title="Mock exam"
+        title="mock-exam"
         description="Fixed 60-question run, 90-minute timer. Review after submission."
       />
     </section>

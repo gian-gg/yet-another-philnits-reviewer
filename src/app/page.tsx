@@ -39,6 +39,18 @@ export default function Page() {
           to change theme
         </p>
       </footer>
+
+      <aside
+        aria-label="Latest update"
+        className="fixed inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-3 text-[10px] tracking-wide text-muted-foreground/80"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+      >
+        <p className="inline-flex max-w-full items-center gap-1.5 font-mono">
+          <span className="truncate">
+            mock exam can now sit any past paper verbatim
+          </span>
+        </p>
+      </aside>
     </main>
   )
 }

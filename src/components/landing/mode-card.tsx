@@ -37,7 +37,7 @@ export function ModeCard({
 
       <div className="flex items-center gap-4 px-4 py-3.5">
         <div className="min-w-0 flex-1">
-          <h2 className="font-heading text-base font-semibold tracking-tight sm:text-lg">
+          <h2 className="font-mono text-base font-semibold tracking-tight text-balance sm:text-lg">
             {title}
           </h2>
           <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
