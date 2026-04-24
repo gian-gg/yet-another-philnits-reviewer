@@ -1,7 +1,7 @@
 [
   {
     "id": "2023A_FE_AM_01",
-    "topic": "applied-math",
+    "topic": "discrete-math",
     "image": "/2023/autumn/01.avif",
     "answer": "b"
   },
@@ -31,7 +31,7 @@
   },
   {
     "id": "2023A_FE_AM_06",
-    "topic": "number-systems",
+    "topic": "discrete-math",
     "image": "/2023/autumn/06.avif",
     "answer": "d"
   },
@@ -43,13 +43,13 @@
   },
   {
     "id": "2023A_FE_AM_08",
-    "topic": "digital-logic",
+    "topic": "discrete-math",
     "image": "/2023/autumn/08.avif",
     "answer": "d"
   },
   {
     "id": "2023A_FE_AM_09",
-    "topic": "computer-architecture",
+    "topic": "discrete-math",
     "image": "/2023/autumn/09.avif",
     "answer": "c"
   },
@@ -91,7 +91,7 @@
   },
   {
     "id": "2023A_FE_AM_16",
-    "topic": "software-engineering",
+    "topic": "computer-architecture",
     "image": "/2023/autumn/16.avif",
     "answer": "d"
   },
@@ -127,7 +127,7 @@
   },
   {
     "id": "2023A_FE_AM_22",
-    "topic": "applied-math",
+    "topic": "computer-architecture",
     "image": "/2023/autumn/22.avif",
     "answer": "c"
   },
@@ -139,7 +139,7 @@
   },
   {
     "id": "2023A_FE_AM_24",
-    "topic": "emerging-tech",
+    "topic": "computer-graphics",
     "image": "/2023/autumn/24.avif",
     "answer": "d"
   },
@@ -253,7 +253,7 @@
   },
   {
     "id": "2023A_FE_AM_43",
-    "topic": "software-testing",
+    "topic": "cybersecurity",
     "image": "/2023/autumn/43.avif",
     "answer": "a"
   },
@@ -343,7 +343,7 @@
   },
   {
     "id": "2023A_FE_AM_58",
-    "topic": "system-strategy",
+    "topic": "it-service-management",
     "image": "/2023/autumn/58.avif",
     "answer": "a"
   },
@@ -385,7 +385,7 @@
   },
   {
     "id": "2023A_FE_AM_65",
-    "topic": "business-strategy",
+    "topic": "system-strategy",
     "image": "/2023/autumn/65.avif",
     "answer": "b"
   },
@@ -445,7 +445,7 @@
   },
   {
     "id": "2023A_FE_AM_75",
-    "topic": "system-auditing",
+    "topic": "business-strategy",
     "image": "/2023/autumn/75.avif",
     "answer": "c"
   },
