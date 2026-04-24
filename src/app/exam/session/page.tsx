@@ -1,7 +1,11 @@
 import type { Metadata } from "next"
 
 import { FE_AM_BLUEPRINT } from "@/lib/exam-blueprint"
-import { getMockExamQuestions } from "@/lib/questions"
+import {
+  getAvailableExams,
+  getExamPaperQuestions,
+  getMockExamQuestions,
+} from "@/lib/questions"
 import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
 
@@ -11,15 +15,40 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-const EXAM_DURATION_MINUTES = 90
+const BLUEPRINT_DURATION_MINUTES = 90
 
 interface PageProps {
-  searchParams: Promise<{ seed?: string }>
+  searchParams: Promise<{ seed?: string; exam?: string }>
 }
 
 export default async function Page({ searchParams }: PageProps) {
-  const { seed: seedRaw } = await searchParams
+  const { seed: seedRaw, exam: examRaw } = await searchParams
   const seed = Number.parseInt(seedRaw ?? "", 10)
+
+  const availableExams = getAvailableExams()
+  const paper = examRaw
+    ? availableExams.find((e) => e.id === examRaw)
+    : undefined
+
+  if (paper) {
+    const questions = getExamPaperQuestions(paper.id)
+    if (questions.length === 0) {
+      return (
+        <SessionEmpty modeLabel={paper.label} setupHref="/exam" topics="all" />
+      )
+    }
+    const durationMinutes = questions.length === 80 ? 150 : 90
+    return (
+      <SessionRunner
+        mode="exam"
+        questions={questions}
+        durationMinutes={durationMinutes}
+        setupHref="/exam"
+        modeLabel={paper.label}
+      />
+    )
+  }
+
   const questions = getMockExamQuestions(
     FE_AM_BLUEPRINT,
     Number.isFinite(seed) ? seed : undefined
@@ -33,7 +62,7 @@ export default async function Page({ searchParams }: PageProps) {
     <SessionRunner
       mode="exam"
       questions={questions}
-      durationMinutes={EXAM_DURATION_MINUTES}
+      durationMinutes={BLUEPRINT_DURATION_MINUTES}
       setupHref="/exam"
       modeLabel="Mock Exam"
     />

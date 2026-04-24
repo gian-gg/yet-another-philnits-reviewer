@@ -118,6 +118,16 @@ export function getAvailableExams(): readonly ExamSummary[] {
   return AVAILABLE_EXAMS
 }
 
+/**
+ * Return every question from a specific past paper in bank order.
+ * `examId` uses the `<year><season>_<level>_<session>` form, e.g.
+ * `2015A_FE_AM`. Unknown ids return an empty array.
+ */
+export function getExamPaperQuestions(examId: string): Question[] {
+  const prefix = `${examId}_`
+  return BANK.filter((q) => q.id.startsWith(prefix)).map((q) => ({ ...q }))
+}
+
 // ---------- Public API ----------
 
 export function getQuestions({
