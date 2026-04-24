@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -20,6 +20,7 @@ const QUESTION_DEFAULT = 25
 
 export function PracticeSetup() {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [selected, setSelected] = useState<ReadonlySet<TopicId>>(
     () => new Set(ALL_TOPIC_IDS)
   )
@@ -76,7 +77,9 @@ export function PracticeSetup() {
       topics,
       count: String(questionCount),
     })
-    router.push(`/practice/session?${params.toString()}`)
+    startTransition(() => {
+      router.push(`/practice/session?${params.toString()}`)
+    })
   }
 
   return (
@@ -205,12 +208,24 @@ export function PracticeSetup() {
             type="button"
             size="lg"
             onClick={start}
-            disabled={!canStart}
+            disabled={!canStart || isPending}
             className="w-full sm:w-auto"
           >
-            <span className="sm:hidden">Start</span>
-            <span className="hidden sm:inline">Start practice</span>
-            <ArrowRight data-icon="inline-end" aria-hidden />
+            <span className="sm:hidden">
+              {isPending ? "Starting…" : "Start"}
+            </span>
+            <span className="hidden sm:inline">
+              {isPending ? "Starting…" : "Start practice"}
+            </span>
+            {isPending ? (
+              <Loader2
+                data-icon="inline-end"
+                className="animate-spin"
+                aria-hidden
+              />
+            ) : (
+              <ArrowRight data-icon="inline-end" aria-hidden />
+            )}
           </Button>
         </div>
       </div>

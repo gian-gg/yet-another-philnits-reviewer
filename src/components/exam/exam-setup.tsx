@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Clock, ListChecks, Layers } from "lucide-react"
+import { ArrowRight, Clock, ListChecks, Layers, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -46,6 +46,7 @@ function durationForCount(count: number): number {
 
 export function ExamSetup() {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [paperId, setPaperId] = useState<string>(BLUEPRINT_VALUE)
 
   const selection = useMemo(() => {
@@ -76,11 +77,13 @@ export function ExamSetup() {
   }, [paperId])
 
   const start = () => {
-    if (selection.kind === "paper") {
-      router.push(`/exam/session?exam=${encodeURIComponent(paperId)}`)
-    } else {
-      router.push("/exam/session")
-    }
+    startTransition(() => {
+      if (selection.kind === "paper") {
+        router.push(`/exam/session?exam=${encodeURIComponent(paperId)}`)
+      } else {
+        router.push("/exam/session")
+      }
+    })
   }
 
   return (
@@ -237,11 +240,24 @@ export function ExamSetup() {
             type="button"
             size="lg"
             onClick={start}
+            disabled={isPending}
             className="w-full sm:w-auto"
           >
-            <span className="sm:hidden">Start</span>
-            <span className="hidden sm:inline">Start mock exam</span>
-            <ArrowRight data-icon="inline-end" aria-hidden />
+            <span className="sm:hidden">
+              {isPending ? "Starting…" : "Start"}
+            </span>
+            <span className="hidden sm:inline">
+              {isPending ? "Starting…" : "Start mock exam"}
+            </span>
+            {isPending ? (
+              <Loader2
+                data-icon="inline-end"
+                className="animate-spin"
+                aria-hidden
+              />
+            ) : (
+              <ArrowRight data-icon="inline-end" aria-hidden />
+            )}
           </Button>
         </div>
       </div>
