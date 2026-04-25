@@ -11,9 +11,14 @@ interface SessionEmptyProps {
   topics?: readonly TopicId[] | "all"
 }
 
-const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
-  TOPICS.map((t) => [t.id, t.label])
-) as Record<TopicId, string>
+const TOPIC_LABEL: Record<TopicId, string> = {
+  ...(Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
+    TopicId,
+    string
+  >),
+  pm: "PM",
+  uncategorized: "Uncategorized",
+}
 
 export function SessionEmpty({
   modeLabel,

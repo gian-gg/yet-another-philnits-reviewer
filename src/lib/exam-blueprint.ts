@@ -11,6 +11,7 @@ import { CATEGORIES, TOPICS, type CategoryId, type TopicId } from "./topics"
  */
 export const FE_AM_BLUEPRINT: Readonly<Record<TopicId, number>> = {
   uncategorized: 0,
+  pm: 0,
   // technology — 38
   "number-systems": 1,
   "applied-math": 2,

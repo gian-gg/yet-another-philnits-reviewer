@@ -1,7 +1,7 @@
 import { CATEGORIES, isTopicId, TOPICS, type TopicId } from "./topics"
 import { QUESTIONS as questionsData } from "@/data/questions"
 
-export type ChoiceId = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
+export type ChoiceId = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i"
 
 export const CHOICE_IDS: readonly ChoiceId[] = [
   "a",
@@ -12,6 +12,7 @@ export const CHOICE_IDS: readonly ChoiceId[] = [
   "f",
   "g",
   "h",
+  "i",
 ] as const
 
 export interface Question {
@@ -19,6 +20,8 @@ export interface Question {
   topic: TopicId
   image: string
   answer: ChoiceId
+  /** Number of answer choices for this question (defaults to the tier's max). */
+  choices?: number
 }
 
 export type ExamTier = "AM" | "PM"
@@ -27,8 +30,13 @@ export function tierOf(id: string): ExamTier {
   return id.includes("_FE_PM") ? "PM" : "AM"
 }
 
-export function choiceCountFor(question: Pick<Question, "id">): number {
-  return tierOf(question.id) === "PM" ? 8 : 4
+export function choiceCountFor(
+  question: Pick<Question, "id" | "choices">
+): number {
+  if (question.choices && question.choices >= 2 && question.choices <= 9) {
+    return question.choices
+  }
+  return tierOf(question.id) === "PM" ? 9 : 4
 }
 
 /**
@@ -78,13 +86,14 @@ export function parseCountParam(
 const BANK: readonly Question[] = questionsData
   .filter(
     (q): q is (typeof questionsData)[number] & { topic: TopicId } =>
-      isTopicId(q.topic) || q.topic === "uncategorized"
+      isTopicId(q.topic) || q.topic === "uncategorized" || q.topic === "pm"
   )
   .map((q) => ({
     id: q.id,
     topic: q.topic,
     image: q.image,
     answer: q.answer,
+    ...(q.choices != null ? { choices: q.choices } : {}),
   }))
 
 // ---------- Deterministic shuffle ----------

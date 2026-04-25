@@ -64,9 +64,14 @@ export interface SessionRunnerProps {
 type AnswerMap = Record<string, ChoiceId | undefined>
 type PracticeFeedbackMode = "instant" | "deferred"
 
-const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
-  TOPICS.map((t) => [t.id, t.label])
-) as Record<TopicId, string>
+const TOPIC_LABEL: Record<TopicId, string> = {
+  ...(Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
+    TopicId,
+    string
+  >),
+  pm: "PM",
+  uncategorized: "Uncategorized",
+}
 
 export function SessionRunner({
   mode,
@@ -477,9 +482,7 @@ export function SessionRunner({
             <ul
               className={cn(
                 "mt-6 grid gap-2",
-                choiceCountFor(current) === 8
-                  ? "grid-cols-4 sm:grid-cols-8"
-                  : "grid-cols-2 sm:grid-cols-4"
+                choiceGridClass(choiceCountFor(current))
               )}
               role="list"
             >
@@ -854,6 +857,30 @@ function formatTime(ms: number): string {
   const m = Math.floor(totalSec / 60)
   const s = totalSec % 60
   return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+// Tailwind needs static class names; map count → class string.
+function choiceGridClass(count: number): string {
+  switch (count) {
+    case 2:
+      return "grid-cols-2"
+    case 3:
+      return "grid-cols-3"
+    case 4:
+      return "grid-cols-2 sm:grid-cols-4"
+    case 5:
+      return "grid-cols-2 sm:grid-cols-5"
+    case 6:
+      return "grid-cols-3 sm:grid-cols-6"
+    case 7:
+      return "grid-cols-3 sm:grid-cols-7"
+    case 8:
+      return "grid-cols-4 sm:grid-cols-8"
+    case 9:
+      return "grid-cols-3 sm:grid-cols-9"
+    default:
+      return "grid-cols-2 sm:grid-cols-4"
+  }
 }
 
 function buildAskAiPrompt(q: Question): string {

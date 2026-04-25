@@ -2,6 +2,7 @@ export type CategoryId = "technology" | "management" | "strategy"
 
 export type TopicId =
   | "uncategorized"
+  | "pm"
   | "number-systems"
   | "applied-math"
   | "discrete-math"

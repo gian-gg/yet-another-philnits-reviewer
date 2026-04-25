@@ -1,122 +1,142 @@
 [
   {
     "id": "2024A_FE_PM_01",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/01.avif",
-    "answer": "a"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/01.avif",
+    "answer": "a",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_02",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/02.avif",
-    "answer": "c"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/02.avif",
+    "answer": "g",
+    "choices": 9
   },
   {
     "id": "2024A_FE_PM_03",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/03.avif",
-    "answer": "e"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/03.avif",
+    "answer": "f",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_04",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/04.avif",
-    "answer": "g"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/04.avif",
+    "answer": "c",
+    "choices": 5
   },
   {
     "id": "2024A_FE_PM_05",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/05.avif",
-    "answer": "b"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/05.avif",
+    "answer": "b",
+    "choices": 4
   },
   {
     "id": "2024A_FE_PM_06",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/06.avif",
-    "answer": "h"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/06.avif",
+    "answer": "h",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_07",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/07.avif",
-    "answer": "d"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/07.avif",
+    "answer": "c",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_08",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/08.avif",
-    "answer": "f"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/08.avif",
+    "answer": "c",
+    "choices": 4
   },
   {
     "id": "2024A_FE_PM_09",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/09.avif",
-    "answer": "c"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/09.avif",
+    "answer": "b",
+    "choices": 4
   },
   {
     "id": "2024A_FE_PM_10",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/10.avif",
-    "answer": "a"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/10.avif",
+    "answer": "e",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_11",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/11.avif",
-    "answer": "e"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/11.avif",
+    "answer": "f",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_12",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/12.avif",
-    "answer": "b"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/12.avif",
+    "answer": "b",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_13",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/13.avif",
-    "answer": "g"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/13.avif",
+    "answer": "e",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_14",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/14.avif",
-    "answer": "d"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/14.avif",
+    "answer": "e",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_15",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/15.avif",
-    "answer": "h"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/15.avif",
+    "answer": "a",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_16",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/16.avif",
-    "answer": "f"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/16.avif",
+    "answer": "d",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_17",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/17.avif",
-    "answer": "a"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/17.avif",
+    "answer": "c",
+    "choices": 6
   },
   {
     "id": "2024A_FE_PM_18",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/18.avif",
-    "answer": "c"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/18.avif",
+    "answer": "d",
+    "choices": 5
   },
   {
     "id": "2024A_FE_PM_19",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/19.avif",
-    "answer": "b"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/19.avif",
+    "answer": "d",
+    "choices": 8
   },
   {
     "id": "2024A_FE_PM_20",
-    "topic": "uncategorized",
-    "image": "/2024/autumn/20.avif",
-    "answer": "d"
+    "topic": "pm",
+    "image": "/2024/autumn/pm/20.avif",
+    "answer": "c",
+    "choices": 6
   }
 ]

@@ -24,6 +24,54 @@ export interface RenderedPage {
   pdfHeight: number
 }
 
+/**
+ * Read each question's text block and count distinct `[a-i])` choice labels.
+ * PM Subject-B papers use letters up to `i`. Returns a map of questionNo → count.
+ */
+export async function extractChoiceCounts(
+  pdfPath: string
+): Promise<Map<number, number>> {
+  const data = new Uint8Array(fs.readFileSync(pdfPath))
+  const doc = await pdfjsLib.getDocument({
+    data,
+    disableFontFace: true,
+    isEvalSupported: false,
+  }).promise
+
+  const parts: string[] = []
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p)
+    const tc = await page.getTextContent()
+    for (const it of tc.items) {
+      if ("str" in it) parts.push(it.str as string)
+    }
+  }
+  const full = parts.join("|")
+
+  // Question booklets often list "Q1–Q20" on the cover, so the same Q-number
+  // appears multiple times. The last occurrence is the real question marker.
+  const lastByQuestion = new Map<number, number>()
+  for (const m of full.matchAll(/Q(\d{1,3})\.?(?=[\s|])/g)) {
+    const num = Number.parseInt(m[1], 10)
+    if (!Number.isFinite(num) || num < 1 || num > 200) continue
+    lastByQuestion.set(num, m.index ?? 0)
+  }
+  const ordered = [...lastByQuestion.entries()].sort((a, b) => a[1] - b[1])
+
+  const out = new Map<number, number>()
+  for (let i = 0; i < ordered.length; i++) {
+    const [num, start] = ordered[i]
+    const end = i + 1 < ordered.length ? ordered[i + 1][1] : full.length
+    const block = full.slice(start, end)
+    const letters = new Set<string>()
+    for (const m of block.matchAll(/(?:^|\|)([a-i])\)/g)) {
+      letters.add(m[1])
+    }
+    if (letters.size > 0) out.set(num, letters.size)
+  }
+  return out
+}
+
 export async function extractQuestionMarkers(
   pdfPath: string
 ): Promise<{ markers: QuestionMarker[]; pages: RenderedPage[] }> {

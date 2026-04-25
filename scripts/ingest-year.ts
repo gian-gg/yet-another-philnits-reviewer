@@ -1,13 +1,18 @@
 /**
- * Ingest one FE exam year.
+ * Ingest one FE exam year — both AM (FE-A) and PM (FE-B) sessions if present.
  *
  * Usage: bun scripts/ingest-year.ts <year-code>
  *   <year-code> = YYYY[AS], e.g. 2025A, 2022S, 2010S
  *
- * Input:  previous-exams/<year-code>_FE/*.pdf
- * Output: yapr-assets/<year>/<season>/NN.avif (e.g. yapr-assets/2025/autumn/01.avif)
- *         src/data/questions/<examId>.json
- *         src/data/questions.ts  (regenerated)
+ * Inputs:  previous-exams/<year-code>_FE/*.pdf
+ *   AM pair: *_FE-A_Questions.pdf + *_FE-A_Answer(s).pdf  (or legacy *_AM_*)
+ *   PM pair: *_FE-B_Questions.pdf + *_FE-B_Answer(s).pdf  (or legacy *_PM_*)
+ *
+ * Outputs:
+ *   AM AVIFs → yapr-assets/<year>/<season>/NN.avif        topic: "uncategorized"
+ *   PM AVIFs → yapr-assets/<year>/<season>/pm/NN.avif     topic: "pm"
+ *   src/data/questions/<examId>.json (one per session present)
+ *   src/data/questions.ts (regenerated)
  *
  * The yapr-assets/ directory is gitignored — it's a staging area for the
  * separate public assets repo served via jsDelivr. After ingest, copy the
@@ -17,7 +22,11 @@
 import fs from "node:fs"
 import path from "node:path"
 import { parseAnswersPdf, type ChoiceId } from "./lib/pdf-answers"
-import { extractQuestionMarkers, cropQuestion } from "./lib/pdf-questions"
+import {
+  extractChoiceCounts,
+  extractQuestionMarkers,
+  cropQuestion,
+} from "./lib/pdf-questions"
 import {
   writeExamJson,
   regenerateAggregate,
@@ -25,8 +34,32 @@ import {
 } from "./lib/emit-data"
 
 const ROOT = process.cwd()
+const SEASON: Record<string, string> = { A: "autumn", S: "spring" }
 
-function main() {
+type Tier = "AM" | "PM"
+
+interface SessionSpec {
+  tier: Tier
+  questionsPdf: string
+  answersPdf: string
+}
+
+function findPair(
+  files: readonly string[],
+  folder: string,
+  questionsRe: RegExp,
+  answersRe: RegExp
+): { questionsPdf: string; answersPdf: string } | null {
+  const q = files.find((f) => questionsRe.test(f))
+  const a = files.find((f) => answersRe.test(f))
+  if (!q || !a) return null
+  return {
+    questionsPdf: path.join(folder, q),
+    answersPdf: path.join(folder, a),
+  }
+}
+
+async function main() {
   const year = process.argv[2]?.trim()
   if (!year || !/^\d{4}[AS]$/.test(year)) {
     console.error("Usage: bun scripts/ingest-year.ts <year-code>")
@@ -41,53 +74,63 @@ function main() {
   }
 
   const files = fs.readdirSync(folder)
-  const questionsPdf = files.find((f) => /_(AM|FE-A)_Questions?\.pdf$/i.test(f))
-  const answersPdf = files.find((f) => /_(AM|FE-A)_Answers?\.pdf$/i.test(f))
+  const am = findPair(
+    files,
+    folder,
+    /_(AM|FE-A)_Questions?\.pdf$/i,
+    /_(AM|FE-A)_Answers?\.pdf$/i
+  )
+  const pm = findPair(
+    files,
+    folder,
+    /_(PM|FE-B)_Questions?\.pdf$/i,
+    /_(PM|FE-B)_Answers?\.pdf$/i
+  )
 
-  if (!questionsPdf || !answersPdf) {
-    console.error(
-      `Could not find MCQ PDFs in ${folder}\n` +
-        `  questions: ${questionsPdf ?? "MISSING"}\n` +
-        `  answers:   ${answersPdf ?? "MISSING"}`
-    )
+  if (!am && !pm) {
+    console.error(`No AM or PM PDF pairs found in ${folder}`)
     process.exit(1)
   }
 
-  const examId = `${year}_FE_AM`
-  return run({
-    examId,
-    questionsPdf: path.join(folder, questionsPdf),
-    answersPdf: path.join(folder, answersPdf),
-  })
+  const sessions: SessionSpec[] = []
+  if (am) sessions.push({ tier: "AM", ...am })
+  else console.warn(`[${year}] no AM pair found — skipping AM ingest`)
+  if (pm) sessions.push({ tier: "PM", ...pm })
+  else console.warn(`[${year}] no PM pair found — skipping PM ingest`)
+
+  for (const session of sessions) {
+    await run({ year, session })
+  }
+
+  regenerateAggregate()
+  console.log(`[${year}] aggregate → src/data/questions.ts`)
 }
 
-const SEASON: Record<string, string> = { A: "autumn", S: "spring" }
-
-async function run(opts: {
-  examId: string
-  questionsPdf: string
-  answersPdf: string
-}) {
-  const { examId, questionsPdf, answersPdf } = opts
-  console.log(`[${examId}] questions: ${path.relative(ROOT, questionsPdf)}`)
-  console.log(`[${examId}] answers:   ${path.relative(ROOT, answersPdf)}`)
+async function run({ year, session }: { year: string; session: SessionSpec }) {
+  const examId = `${year}_FE_${session.tier}`
+  console.log(
+    `[${examId}] questions: ${path.relative(ROOT, session.questionsPdf)}`
+  )
+  console.log(
+    `[${examId}] answers:   ${path.relative(ROOT, session.answersPdf)}`
+  )
 
   const examMatch = /^(\d{4})([A-Z])_/.exec(examId)
   if (!examMatch) {
     console.error(`[${examId}] could not parse year/season from examId`)
     process.exit(1)
   }
-  const year = examMatch[1]
-  const season = SEASON[examMatch[2]]
-  if (!season) {
+  const yearNum = examMatch[1]
+  const seasonName = SEASON[examMatch[2]]
+  if (!seasonName) {
     console.error(`[${examId}] unknown season letter: ${examMatch[2]}`)
     process.exit(1)
   }
 
-  const answers = await parseAnswersPdf(answersPdf)
+  const answers = await parseAnswersPdf(session.answersPdf)
   console.log(`[${examId}] parsed ${answers.size} answers`)
 
-  const { markers, pages } = await extractQuestionMarkers(questionsPdf)
+  const { markers, pages } = await extractQuestionMarkers(session.questionsPdf)
   console.log(
     `[${examId}] rendered ${pages.length} pages, found ${markers.length} question markers`
   )
@@ -96,8 +139,26 @@ async function run(opts: {
     process.exit(1)
   }
 
-  const outDir = path.join(ROOT, "yapr-assets", year, season)
+  const tierSubdir = session.tier === "PM" ? "pm" : ""
+  const outDir = path.join(ROOT, "yapr-assets", yearNum, seasonName, tierSubdir)
   fs.mkdirSync(outDir, { recursive: true })
+
+  const imagePathPrefix =
+    session.tier === "PM"
+      ? `/${yearNum}/${seasonName}/pm`
+      : `/${yearNum}/${seasonName}`
+  const topic = session.tier === "PM" ? "pm" : "uncategorized"
+
+  // PM choice cardinality varies per question (a–d up to a–i). AM is always 4.
+  const choiceCounts =
+    session.tier === "PM"
+      ? await extractChoiceCounts(session.questionsPdf)
+      : null
+  if (choiceCounts) {
+    console.log(
+      `[${examId}] detected choice counts for ${choiceCounts.size} questions`
+    )
+  }
 
   const entries: DataEntry[] = []
   let missingAnswer = 0
@@ -115,26 +176,31 @@ async function run(opts: {
       console.warn(`[${examId}] no answer for Q${m.questionNo} — skipping`)
       continue
     }
-    entries.push({
+    const entry: DataEntry = {
       id,
-      topic: "uncategorized",
-      image: `/${year}/${season}/${num}.avif`,
+      topic,
+      image: `${imagePathPrefix}/${num}.avif`,
       answer: answer as ChoiceId,
-    })
+    }
+    const choices = choiceCounts?.get(m.questionNo)
+    if (choices != null) entry.choices = choices
+    entries.push(entry)
   }
 
   writeExamJson(examId, entries)
-  regenerateAggregate()
 
   console.log(
     `[${examId}] wrote ${entries.length} entries (skipped ${missingAnswer} without answer)`
   )
-  console.log(`[${examId}] AVIFs → yapr-assets/${year}/${season}/`)
+  console.log(
+    `[${examId}] AVIFs → yapr-assets/${yearNum}/${seasonName}${
+      tierSubdir ? `/${tierSubdir}` : ""
+    }/`
+  )
   console.log(`[${examId}] JSON  → src/data/questions/${examId}.json`)
-  console.log(`[${examId}] aggregate → src/data/questions.ts`)
 }
 
-main()?.catch((err) => {
+main().catch((err) => {
   console.error(err)
   process.exit(1)
 })
