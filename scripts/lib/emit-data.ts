@@ -9,7 +9,9 @@ export interface DataEntry {
   id: string
   topic: string
   image: string
-  answer: "a" | "b" | "c" | "d"
+  answer: "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i"
+  /** Number of answer choices for this question. Omit to fall back to tier default. */
+  choices?: number
 }
 
 export function writeExamJson(examId: string, entries: DataEntry[]): void {
@@ -48,6 +50,7 @@ export interface RawQuestion {
   topic: string
   image: string
   answer: ChoiceId
+  choices?: number
 }
 
 export const QUESTIONS: readonly RawQuestion[] = ${JSON.stringify(all, null, 2)} as const

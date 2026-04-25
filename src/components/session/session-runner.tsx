@@ -36,7 +36,12 @@ import {
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
-import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import {
+  CHOICE_IDS,
+  choiceCountFor,
+  type ChoiceId,
+  type Question,
+} from "@/lib/questions"
 import { copyImageToClipboard } from "@/lib/copy-image"
 import { resolveImageUrl } from "@/lib/image"
 
@@ -59,9 +64,14 @@ export interface SessionRunnerProps {
 type AnswerMap = Record<string, ChoiceId | undefined>
 type PracticeFeedbackMode = "instant" | "deferred"
 
-const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
-  TOPICS.map((t) => [t.id, t.label])
-) as Record<TopicId, string>
+const TOPIC_LABEL: Record<TopicId, string> = {
+  ...(Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
+    TopicId,
+    string
+  >),
+  pm: "PM",
+  uncategorized: "Uncategorized",
+}
 
 export function SessionRunner({
   mode,
@@ -239,10 +249,18 @@ export function SessionRunner({
         return
       }
       const key = e.key.toLowerCase()
-      if (key === "a" || key === "1") selectChoice("a")
-      else if (key === "b" || key === "2") selectChoice("b")
-      else if (key === "c" || key === "3") selectChoice("c")
-      else if (key === "d" || key === "4") selectChoice("d")
+      const choiceCount = current ? choiceCountFor(current) : 4
+      const numericIndex = Number.parseInt(key, 10)
+      if (
+        Number.isFinite(numericIndex) &&
+        numericIndex >= 1 &&
+        numericIndex <= choiceCount
+      ) {
+        selectChoice(CHOICE_IDS[numericIndex - 1])
+      } else if (key === "a") selectChoice("a")
+      else if (key === "b") selectChoice("b")
+      else if (key === "c") selectChoice("c")
+      else if (key === "d") selectChoice("d")
       else if (key === "arrowleft" || key === "[") goPrev()
       else if (key === "arrowright" || key === "]" || key === "enter") goNext()
       else if (key === "f") toggleFlag()
@@ -251,7 +269,15 @@ export function SessionRunner({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [selectChoice, goPrev, goNext, toggleFlag, revealCurrent, isFinished])
+  }, [
+    selectChoice,
+    goPrev,
+    goNext,
+    toggleFlag,
+    revealCurrent,
+    isFinished,
+    current,
+  ])
 
   if (isFinished) {
     return (
@@ -454,10 +480,13 @@ export function SessionRunner({
             />
 
             <ul
-              className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
+              className={cn(
+                "mt-6 grid gap-2",
+                choiceGridClass(choiceCountFor(current))
+              )}
               role="list"
             >
-              {CHOICE_IDS.map((choiceId) => {
+              {CHOICE_IDS.slice(0, choiceCountFor(current)).map((choiceId) => {
                 const isChosen = chosen === choiceId
                 const isAnswer = current.answer === choiceId
                 const showAsCorrect = isRevealed && isAnswer
@@ -830,8 +859,33 @@ function formatTime(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`
 }
 
+// Tailwind needs static class names; map count → class string.
+function choiceGridClass(count: number): string {
+  switch (count) {
+    case 2:
+      return "grid-cols-2"
+    case 3:
+      return "grid-cols-3"
+    case 4:
+      return "grid-cols-2 sm:grid-cols-4"
+    case 5:
+      return "grid-cols-2 sm:grid-cols-5"
+    case 6:
+      return "grid-cols-3 sm:grid-cols-6"
+    case 7:
+      return "grid-cols-3 sm:grid-cols-7"
+    case 8:
+      return "grid-cols-4 sm:grid-cols-8"
+    case 9:
+      return "grid-cols-3 sm:grid-cols-9"
+    default:
+      return "grid-cols-2 sm:grid-cols-4"
+  }
+}
+
 function buildAskAiPrompt(q: Question): string {
-  return `Attached is a multiple-choice question (choices a, b, c, d). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
+  const lastChoice = CHOICE_IDS[choiceCountFor(q) - 1]
+  return `Attached is a multiple-choice question (choices a–${lastChoice}). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
 
 (ref: ${q.id})`
 }

@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs"
 
-export type ChoiceId = "a" | "b" | "c" | "d"
+export type ChoiceId = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i"
 
 export async function parseAnswersPdf(
   pdfPath: string
@@ -24,7 +24,7 @@ export async function parseAnswersPdf(
 
   const answers = new Map<number, ChoiceId>()
   // Match both "1 a" and "Q1 a" (also tolerates periods: "Q1." or "1.")
-  const re = /(?:Q)?(\d{1,3})\.?\s+([a-d])\b/gi
+  const re = /(?:Q)?(\d{1,3})\.?\s+([a-i])\b/gi
   for (const m of fullText.matchAll(re)) {
     const n = Number.parseInt(m[1], 10)
     const letter = m[2].toLowerCase() as ChoiceId

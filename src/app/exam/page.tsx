@@ -6,7 +6,7 @@ import { ExamSetup } from "@/components/exam/exam-setup"
 export const metadata: Metadata = {
   title: "Mock Exam",
   description:
-    "Run a full PhilNITS FE mock exam: 60 questions, 90-minute timer, scored at the end.",
+    "Sit a full PhilNITS FE AM or PM paper under timed conditions, scored at the end.",
   alternates: { canonical: "/exam" },
 }
 

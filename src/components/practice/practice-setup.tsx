@@ -7,6 +7,8 @@ import { ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { NumberStepper } from "@/components/ui/number-stepper"
+import { TrackTabs, type Track } from "@/components/track-tabs"
+import { getAvailableExams, tierQuestionCount } from "@/lib/questions"
 import { TOPICS, type TopicId } from "@/lib/topics"
 
 import { TopicPicker } from "./topic-picker"
@@ -18,9 +20,13 @@ const QUESTION_MIN = 1
 const QUESTION_MAX = 200
 const QUESTION_DEFAULT = 25
 
+const PM_EXAMS = getAvailableExams().filter((e) => e.tier === "PM")
+const PM_TOTAL = tierQuestionCount("PM")
+
 export function PracticeSetup() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [track, setTrack] = useState<Track>("AM")
   const [selected, setSelected] = useState<ReadonlySet<TopicId>>(
     () => new Set(ALL_TOPIC_IDS)
   )
@@ -52,10 +58,19 @@ export function PracticeSetup() {
   const clearAll = () => setSelected(new Set())
 
   const count = selected.size
-  const canStart = count > 0 || includeUncategorized
   const allSelected = count === TOTAL
 
+  const pmCountMax = PM_TOTAL || QUESTION_MAX
+  const pmCount = Math.min(questionCount, pmCountMax)
+
+  const canStart =
+    track === "AM" ? count > 0 || includeUncategorized : PM_EXAMS.length > 0
+
   const status = useMemo(() => {
+    if (track === "PM") {
+      if (PM_EXAMS.length === 0) return "No PM papers available."
+      return `${pmCount} of ${PM_TOTAL} PM questions, sampled across ${PM_EXAMS.length} papers.`
+    }
     if (count === 0) {
       return includeUncategorized
         ? "Uncategorized only."
@@ -66,10 +81,20 @@ export function PracticeSetup() {
         ? `All ${TOTAL} topics selected.`
         : `${count} of ${TOTAL} topics selected.`
     return includeUncategorized ? `${base} + uncategorized` : base
-  }, [count, includeUncategorized])
+  }, [track, pmCount, count, includeUncategorized])
 
   const start = () => {
     if (!canStart) return
+    if (track === "PM") {
+      const params = new URLSearchParams({
+        track: "PM",
+        count: String(pmCount),
+      })
+      startTransition(() => {
+        router.push(`/practice/session?${params.toString()}`)
+      })
+      return
+    }
     const ids = Array.from(selected) as string[]
     if (includeUncategorized) ids.push("uncategorized")
     const topics = allSelected && !includeUncategorized ? "all" : ids.join(",")
@@ -84,55 +109,95 @@ export function PracticeSetup() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground sm:text-sm">
-          Default: all topics selected. Deselect any you want to skip — you need
-          at least one to start.
-        </p>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={selectAll}
-            type="button"
-            disabled={allSelected}
-          >
-            Select all
-          </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={clearAll}
-            type="button"
-            disabled={count === 0}
-          >
-            Clear all
-          </Button>
-        </div>
-      </div>
-
-      <TopicPicker
-        selected={selected}
-        onToggle={toggle}
-        onToggleCategory={toggleCategory}
+      <TrackTabs
+        value={track}
+        onChange={setTrack}
+        ariaLabel="Practice track"
+        tabs={[
+          { track: "AM" },
+          { track: "PM", disabled: PM_EXAMS.length === 0 },
+        ]}
       />
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
-        <Checkbox
-          checked={includeUncategorized}
-          onCheckedChange={(v) => setIncludeUncategorized(v === true)}
-          aria-label="Include uncategorized questions"
-          className="mt-0.5"
-        />
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="text-sm leading-snug font-medium">
-            Include uncategorized questions
-          </span>
-          <span className="mt-0.5 text-xs text-muted-foreground">
-            Older papers (2007–2019) not yet classified by topic.
-          </span>
-        </span>
-      </label>
+      {track === "AM" ? (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              Default: all topics selected. Deselect any you want to skip — you
+              need at least one to start.
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={selectAll}
+                type="button"
+                disabled={allSelected}
+              >
+                Select all
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={clearAll}
+                type="button"
+                disabled={count === 0}
+              >
+                Clear all
+              </Button>
+            </div>
+          </div>
+
+          <TopicPicker
+            selected={selected}
+            onToggle={toggle}
+            onToggleCategory={toggleCategory}
+          />
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
+            <Checkbox
+              checked={includeUncategorized}
+              onCheckedChange={(v) => setIncludeUncategorized(v === true)}
+              aria-label="Include uncategorized questions"
+              className="mt-0.5"
+            />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm leading-snug font-medium">
+                Include uncategorized questions
+              </span>
+              <span className="mt-0.5 text-xs text-muted-foreground">
+                Older AM papers (2007–2019) not yet classified by topic.
+              </span>
+            </span>
+          </label>
+        </>
+      ) : (
+        <section className="rounded-lg border bg-card">
+          <div className="flex items-baseline justify-between gap-3 border-b px-4 py-3">
+            <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
+              PM bank
+            </span>
+            <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+              {PM_EXAMS.length} papers · {PM_TOTAL}Q
+            </span>
+          </div>
+          <div className="flex items-start gap-3 px-4 py-3">
+            <span
+              aria-hidden
+              className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground/60"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-foreground">
+                Sampled across all PM papers (2024–2025).
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Pick the question count below — questions are drawn at random
+                from the full PM bank.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div
         className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
@@ -142,14 +207,14 @@ export function PracticeSetup() {
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <p
               className={
-                count === 0
+                !canStart
                   ? "min-w-0 flex-1 truncate text-xs text-muted-foreground sm:text-sm"
                   : "min-w-0 flex-1 truncate text-xs text-foreground sm:text-sm"
               }
               aria-live="polite"
             >
               <span className="font-mono text-[11px] text-muted-foreground tabular-nums sm:text-xs">
-                {count}/{TOTAL}
+                {track === "AM" ? `${count}/${TOTAL}` : track}
               </span>
               <span className="mx-2 hidden text-muted-foreground/40 sm:inline">
                 ·
@@ -158,9 +223,9 @@ export function PracticeSetup() {
             </p>
             <div className="sm:hidden">
               <NumberStepper
-                value={questionCount}
+                value={track === "PM" ? pmCount : questionCount}
                 min={QUESTION_MIN}
-                max={QUESTION_MAX}
+                max={track === "PM" ? pmCountMax : QUESTION_MAX}
                 onChange={setQuestionCount}
                 aria-label="Number of questions"
               />
@@ -172,9 +237,9 @@ export function PracticeSetup() {
               How many questions?
             </span>
             <NumberStepper
-              value={questionCount}
+              value={track === "PM" ? pmCount : questionCount}
               min={QUESTION_MIN}
-              max={QUESTION_MAX}
+              max={track === "PM" ? pmCountMax : QUESTION_MAX}
               onChange={setQuestionCount}
               aria-label="Number of questions"
             />
@@ -183,8 +248,11 @@ export function PracticeSetup() {
               role="group"
               aria-label="Question count presets"
             >
-              {QUESTION_PRESETS.map((preset) => {
-                const active = questionCount === preset
+              {QUESTION_PRESETS.filter(
+                (p) => track === "AM" || p <= pmCountMax
+              ).map((preset) => {
+                const active =
+                  (track === "PM" ? pmCount : questionCount) === preset
                 return (
                   <button
                     key={preset}

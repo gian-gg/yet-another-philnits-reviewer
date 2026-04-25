@@ -20,15 +20,25 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
-import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import {
+  CHOICE_IDS,
+  choiceCountFor,
+  type ChoiceId,
+  type Question,
+} from "@/lib/questions"
 import { copyImageToClipboard } from "@/lib/copy-image"
 import { resolveImageUrl } from "@/lib/image"
 
 import { QuestionImage } from "./question-image"
 
-const TOPIC_LABEL: Record<TopicId, string> = Object.fromEntries(
-  TOPICS.map((t) => [t.id, t.label])
-) as Record<TopicId, string>
+const TOPIC_LABEL: Record<TopicId, string> = {
+  ...(Object.fromEntries(TOPICS.map((t) => [t.id, t.label])) as Record<
+    TopicId,
+    string
+  >),
+  pm: "PM",
+  uncategorized: "Uncategorized",
+}
 
 interface SessionResultsProps {
   modeLabel: string
@@ -270,10 +280,13 @@ export function SessionResults({
                   />
 
                   <ul
-                    className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4"
+                    className={cn(
+                      "mt-3 grid gap-1.5",
+                      choiceGridClass(choiceCountFor(q))
+                    )}
                     role="list"
                   >
-                    {CHOICE_IDS.map((choiceId) => {
+                    {CHOICE_IDS.slice(0, choiceCountFor(q)).map((choiceId) => {
                       const isAnswer = choiceId === q.answer
                       const isChosen = choiceId === chosen
                       return (
@@ -372,8 +385,32 @@ function AskAiRow({ question }: { question: Question }) {
   )
 }
 
+function choiceGridClass(count: number): string {
+  switch (count) {
+    case 2:
+      return "grid-cols-2"
+    case 3:
+      return "grid-cols-3"
+    case 4:
+      return "grid-cols-2 sm:grid-cols-4"
+    case 5:
+      return "grid-cols-2 sm:grid-cols-5"
+    case 6:
+      return "grid-cols-3 sm:grid-cols-6"
+    case 7:
+      return "grid-cols-3 sm:grid-cols-7"
+    case 8:
+      return "grid-cols-4 sm:grid-cols-8"
+    case 9:
+      return "grid-cols-3 sm:grid-cols-9"
+    default:
+      return "grid-cols-2 sm:grid-cols-4"
+  }
+}
+
 function buildAskAiPrompt(q: Question): string {
-  return `Attached is a multiple-choice question (choices a, b, c, d). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
+  const lastChoice = CHOICE_IDS[choiceCountFor(q) - 1]
+  return `Attached is a multiple-choice question (choices a–${lastChoice}). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
 
 (ref: ${q.id})`
 }

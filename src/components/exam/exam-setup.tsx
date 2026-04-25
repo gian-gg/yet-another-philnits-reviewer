@@ -19,9 +19,13 @@ import {
   FE_AM_BLUEPRINT,
   FE_AM_BLUEPRINT_TOTAL,
 } from "@/lib/exam-blueprint"
-import { getAvailableExams } from "@/lib/questions"
+import { TrackTabs, type Track } from "@/components/track-tabs"
+import { getAvailableExams, paperDurationMinutes } from "@/lib/questions"
 
 const BLUEPRINT_VALUE = "blueprint"
+const PM_RANDOM_VALUE = "pm-random"
+const PM_RANDOM_COUNT = 20
+const PM_RANDOM_DURATION_MINUTES = 100
 const BLUEPRINT_QUESTION_COUNT = FE_AM_BLUEPRINT_TOTAL
 const BLUEPRINT_DURATION_MINUTES = 90
 const BLUEPRINT_ROWS = blueprintByCategory(FE_AM_BLUEPRINT)
@@ -31,31 +35,43 @@ const BLUEPRINT_COVERAGE = BLUEPRINT_ROWS.map(
 
 const AVAILABLE_EXAMS = getAvailableExams()
 
-const LEGACY_EXAMS = AVAILABLE_EXAMS.filter((e) => {
-  const year = Number.parseInt(e.id.slice(0, 4), 10)
-  return year <= 2019
-})
-const MODERN_EXAMS = AVAILABLE_EXAMS.filter((e) => {
-  const year = Number.parseInt(e.id.slice(0, 4), 10)
-  return year >= 2020
-})
+const isPmExam = (id: string) => id.includes("_FE_PM")
+const yearOf = (id: string) => Number.parseInt(id.slice(0, 4), 10)
 
-function durationForCount(count: number): number {
-  return count === 80 ? 150 : 90
-}
+const LEGACY_EXAMS = AVAILABLE_EXAMS.filter(
+  (e) => !isPmExam(e.id) && yearOf(e.id) <= 2019
+)
+const MODERN_AM_EXAMS = AVAILABLE_EXAMS.filter(
+  (e) => !isPmExam(e.id) && yearOf(e.id) >= 2020
+)
+const MODERN_PM_EXAMS = AVAILABLE_EXAMS.filter((e) => isPmExam(e.id))
 
 export function ExamSetup() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [paperId, setPaperId] = useState<string>(BLUEPRINT_VALUE)
+  const [track, setTrack] = useState<Track>("AM")
+  const [amPaperId, setAmPaperId] = useState<string>(BLUEPRINT_VALUE)
+  const [pmPaperId, setPmPaperId] = useState<string>(() =>
+    MODERN_PM_EXAMS.length > 0 ? PM_RANDOM_VALUE : ""
+  )
+  const paperId = track === "AM" ? amPaperId : pmPaperId
+  const setPaperId = track === "AM" ? setAmPaperId : setPmPaperId
 
   const selection = useMemo(() => {
-    if (paperId === BLUEPRINT_VALUE) {
+    if (track === "AM" && paperId === BLUEPRINT_VALUE) {
       return {
         kind: "blueprint" as const,
         count: BLUEPRINT_QUESTION_COUNT,
         duration: BLUEPRINT_DURATION_MINUTES,
         coverage: BLUEPRINT_COVERAGE,
+      }
+    }
+    if (track === "PM" && paperId === PM_RANDOM_VALUE) {
+      return {
+        kind: "pm-random" as const,
+        count: PM_RANDOM_COUNT,
+        duration: PM_RANDOM_DURATION_MINUTES,
+        coverage: `${PM_RANDOM_COUNT} questions sampled across ${MODERN_PM_EXAMS.length} PM papers`,
       }
     }
     const paper = AVAILABLE_EXAMS.find((e) => e.id === paperId)
@@ -70,16 +86,19 @@ export function ExamSetup() {
     return {
       kind: "paper" as const,
       count: paper.questionCount,
-      duration: durationForCount(paper.questionCount),
+      duration: paperDurationMinutes(paper.id, paper.questionCount),
       coverage: `Full paper · ${paper.questionCount} questions in original order`,
       label: paper.label,
+      tier: paper.tier,
     }
-  }, [paperId])
+  }, [paperId, track])
 
   const start = () => {
     startTransition(() => {
       if (selection.kind === "paper") {
         router.push(`/exam/session?exam=${encodeURIComponent(paperId)}`)
+      } else if (selection.kind === "pm-random") {
+        router.push("/exam/session?track=PM")
       } else {
         router.push("/exam/session")
       }
@@ -88,6 +107,16 @@ export function ExamSetup() {
 
   return (
     <div className="space-y-5">
+      <TrackTabs
+        value={track}
+        onChange={setTrack}
+        ariaLabel="Mock exam track"
+        tabs={[
+          { track: "AM" },
+          { track: "PM", disabled: MODERN_PM_EXAMS.length === 0 },
+        ]}
+      />
+
       <section aria-label="Paper selection" className="space-y-2">
         <div className="flex items-baseline justify-between gap-3">
           <label
@@ -97,7 +126,11 @@ export function ExamSetup() {
             Paper
           </label>
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground/70 uppercase">
-            {selection.kind === "paper" ? "Past paper" : "Blueprint"}
+            {selection.kind === "paper"
+              ? `${selection.tier} paper`
+              : selection.kind === "pm-random"
+                ? "PM randomized"
+                : "Blueprint"}
           </span>
         </div>
         <Select value={paperId} onValueChange={setPaperId}>
@@ -108,42 +141,64 @@ export function ExamSetup() {
             <SelectValue placeholder="Choose a paper" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={BLUEPRINT_VALUE}>
-              Blueprint mix — sampled from 2020+ papers
-            </SelectItem>
-            {MODERN_EXAMS.length > 0 ? (
-              <SelectGroup>
-                <SelectLabel>2020–2025 · holdout</SelectLabel>
-                {MODERN_EXAMS.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ) : null}
-            {LEGACY_EXAMS.length > 0 ? (
-              <SelectGroup>
-                <SelectLabel>2007–2019 · legacy</SelectLabel>
-                {LEGACY_EXAMS.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ) : null}
+            {track === "AM" ? (
+              <>
+                <SelectItem value={BLUEPRINT_VALUE}>
+                  Blueprint mix — sampled from 2020+ papers
+                </SelectItem>
+                {MODERN_AM_EXAMS.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>2020–2025 · AM holdout</SelectLabel>
+                    {MODERN_AM_EXAMS.map((exam) => (
+                      <SelectItem key={exam.id} value={exam.id}>
+                        {exam.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+                {LEGACY_EXAMS.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>2007–2019 · legacy</SelectLabel>
+                    {LEGACY_EXAMS.map((exam) => (
+                      <SelectItem key={exam.id} value={exam.id}>
+                        {exam.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <SelectItem value={PM_RANDOM_VALUE}>
+                  Randomized — sampled across PM 2024–2025
+                </SelectItem>
+                <SelectGroup>
+                  <SelectLabel>2024–2025 · PM</SelectLabel>
+                  {MODERN_PM_EXAMS.map((exam) => (
+                    <SelectItem key={exam.id} value={exam.id}>
+                      {exam.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </>
+            )}
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Blueprint samples a synthetic 60Q paper from classified 2020+
-          questions. Pick a specific year to sit that paper verbatim — useful
-          for reserving newer papers as an unseen holdout.
+          {track === "AM"
+            ? "Blueprint samples a synthetic 60Q paper from classified 2020+ questions. Pick a specific year to sit that paper verbatim — useful for reserving newer papers as an unseen holdout."
+            : "PM papers (2024+) are standalone MCQ in the post-2023 format — 20 questions, 100-minute limit. Pick a year to sit it verbatim, or Randomized for a fresh 20Q draw across all PM papers."}
         </p>
       </section>
 
       <section aria-label="Exam summary" className="rounded-lg border bg-card">
         <div className="flex items-center gap-3 border-b px-4 py-3">
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-            {selection.kind === "paper" ? selection.label : "Mock Exam"}
+            {selection.kind === "paper"
+              ? selection.label
+              : selection.kind === "pm-random"
+                ? "PM Randomized"
+                : "Mock Exam"}
           </span>
           <span className="ml-auto font-mono text-[11px] text-muted-foreground tabular-nums">
             {selection.count}Q · {selection.duration}m
@@ -158,7 +213,9 @@ export function ExamSetup() {
             hint={
               selection.kind === "paper"
                 ? "Administered in the paper's original order."
-                : "Fixed count — matches a full mock run."
+                : selection.kind === "pm-random"
+                  ? "Sampled across all PM 2024–2025 papers."
+                  : "Fixed count — matches a full mock run."
             }
           />
           <FactRow
@@ -172,8 +229,12 @@ export function ExamSetup() {
             label="Coverage"
             hint={
               selection.kind === "paper"
-                ? "Exact past paper — no topic shuffling."
-                : "Topic mix mirrors a real PhilNITS FE AM paper."
+                ? selection.tier === "PM"
+                  ? "Exact PM paper — questions in original order."
+                  : "Exact past paper — no topic shuffling."
+                : selection.kind === "pm-random"
+                  ? "Random draw from the full PM bank, no per-paper bias."
+                  : "Topic mix mirrors a real PhilNITS FE AM paper."
             }
             detail={selection.coverage}
           />
@@ -232,7 +293,9 @@ export function ExamSetup() {
             <span className="hidden sm:inline">
               {selection.kind === "paper"
                 ? `Sitting ${selection.label}. Timer starts on Start.`
-                : "Ready when you are. Timer starts on Start."}
+                : selection.kind === "pm-random"
+                  ? "Sitting a random PM draw. Timer starts on Start."
+                  : "Ready when you are. Timer starts on Start."}
             </span>
           </p>
 
