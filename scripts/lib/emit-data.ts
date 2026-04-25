@@ -9,7 +9,7 @@ export interface DataEntry {
   id: string
   topic: string
   image: string
-  answer: "a" | "b" | "c" | "d"
+  answer: "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
 }
 
 export function writeExamJson(examId: string, entries: DataEntry[]): void {

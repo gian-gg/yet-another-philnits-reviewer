@@ -5,6 +5,7 @@ import {
   getAvailableExams,
   getExamPaperQuestions,
   getMockExamQuestions,
+  paperDurationMinutes,
 } from "@/lib/questions"
 import { SessionEmpty } from "@/components/session/session-empty"
 import { SessionRunner } from "@/components/session/session-runner"
@@ -37,7 +38,7 @@ export default async function Page({ searchParams }: PageProps) {
         <SessionEmpty modeLabel={paper.label} setupHref="/exam" topics="all" />
       )
     }
-    const durationMinutes = questions.length === 80 ? 150 : 90
+    const durationMinutes = paperDurationMinutes(paper.id, questions.length)
     return (
       <SessionRunner
         mode="exam"

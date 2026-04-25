@@ -17,7 +17,7 @@ export function ModeGrid() {
         label="Mock Exam"
         meta="60Q · 90m"
         title="mock-exam"
-        description="Fixed 60-question run, 90-minute timer. Review after submission."
+        description="Sit a full AM or PM paper under timed conditions."
       />
     </section>
   )

@@ -1,15 +1,47 @@
 import { CATEGORIES, isTopicId, TOPICS, type TopicId } from "./topics"
 import { QUESTIONS as questionsData } from "@/data/questions"
 
-export type ChoiceId = "a" | "b" | "c" | "d"
+export type ChoiceId = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"
 
-export const CHOICE_IDS: readonly ChoiceId[] = ["a", "b", "c", "d"] as const
+export const CHOICE_IDS: readonly ChoiceId[] = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+] as const
 
 export interface Question {
   id: string
   topic: TopicId
   image: string
   answer: ChoiceId
+}
+
+export type ExamTier = "AM" | "PM"
+
+export function tierOf(id: string): ExamTier {
+  return id.includes("_FE_PM") ? "PM" : "AM"
+}
+
+export function choiceCountFor(question: Pick<Question, "id">): number {
+  return tierOf(question.id) === "PM" ? 8 : 4
+}
+
+/**
+ * Official sit duration for a past paper, in minutes.
+ * AM: 80Q papers are 150m, smaller papers (incl. blueprint) are 90m.
+ * PM: 100m, regardless of question count.
+ */
+export function paperDurationMinutes(
+  examId: string,
+  questionCount: number
+): number {
+  if (tierOf(examId) === "PM") return 100
+  return questionCount >= 70 ? 150 : 90
 }
 
 export interface GetQuestionsOptions {
@@ -83,6 +115,7 @@ export interface ExamSummary {
   id: string
   label: string
   questionCount: number
+  tier: ExamTier
 }
 
 const SEASON_LABEL: Record<string, string> = {
@@ -111,6 +144,7 @@ const AVAILABLE_EXAMS: readonly ExamSummary[] = (() => {
       id,
       label: formatExamLabel(id),
       questionCount,
+      tier: tierOf(id),
     }))
 })()
 
@@ -128,6 +162,36 @@ export function getExamPaperQuestions(examId: string): Question[] {
   return BANK.filter((q) => q.id.startsWith(prefix)).map((q) => ({ ...q }))
 }
 
+/**
+ * Deterministically sample `count` questions from every paper in a given tier.
+ * Used by tier-wide practice (e.g. drill all PM questions across 2024–2025).
+ */
+export function sampleTierQuestions(
+  tier: ExamTier,
+  count: number,
+  seed: number = Date.now() & 0xffffffff
+): Question[] {
+  const pool = BANK.filter((q) => tierOf(q.id) === tier)
+  if (pool.length === 0) return []
+  const rand = mulberry32(seed)
+  const shuffled = shuffle(pool, rand)
+  const out: Question[] = []
+  for (let i = 0; i < count; i++) {
+    const base = shuffled[i % shuffled.length]
+    if (i < shuffled.length) {
+      out.push(base)
+    } else {
+      const cycle = Math.floor(i / shuffled.length) + 1
+      out.push({ ...base, id: `${base.id}-r${cycle}` })
+    }
+  }
+  return out
+}
+
+export function tierQuestionCount(tier: ExamTier): number {
+  return BANK.filter((q) => tierOf(q.id) === tier).length
+}
+
 // ---------- Public API ----------
 
 export function getQuestions({
@@ -136,10 +200,12 @@ export function getQuestions({
   seed = Date.now() & 0xffffffff,
 }: GetQuestionsOptions): Question[] {
   const rand = mulberry32(seed)
+  // Topic-based queries only ever sample from the AM tier — PM is paper-only.
+  const amBank = BANK.filter((q) => tierOf(q.id) === "AM")
   const pool =
     !topics || topics === "all"
-      ? BANK.filter((q) => q.topic !== "uncategorized")
-      : BANK.filter((q) => topics.includes(q.topic))
+      ? amBank.filter((q) => q.topic !== "uncategorized")
+      : amBank.filter((q) => topics.includes(q.topic))
 
   if (pool.length === 0) return []
 
@@ -173,9 +239,10 @@ export function getMockExamQuestions(
   blueprint: Readonly<Record<TopicId, number>>,
   seed: number = Date.now() & 0xffffffff
 ): Question[] {
-  // Index bank by topic once.
+  // Blueprint targets the AM paper shape — never sample PM into a mock AM run.
+  const amBank = BANK.filter((q) => tierOf(q.id) === "AM")
   const byTopic = new Map<TopicId, Question[]>()
-  for (const q of BANK) {
+  for (const q of amBank) {
     const arr = byTopic.get(q.topic)
     if (arr) arr.push(q)
     else byTopic.set(q.topic, [q])

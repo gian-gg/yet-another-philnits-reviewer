@@ -19,7 +19,8 @@ import {
   FE_AM_BLUEPRINT,
   FE_AM_BLUEPRINT_TOTAL,
 } from "@/lib/exam-blueprint"
-import { getAvailableExams } from "@/lib/questions"
+import { TrackTabs, type Track } from "@/components/track-tabs"
+import { getAvailableExams, paperDurationMinutes } from "@/lib/questions"
 
 const BLUEPRINT_VALUE = "blueprint"
 const BLUEPRINT_QUESTION_COUNT = FE_AM_BLUEPRINT_TOTAL
@@ -31,26 +32,30 @@ const BLUEPRINT_COVERAGE = BLUEPRINT_ROWS.map(
 
 const AVAILABLE_EXAMS = getAvailableExams()
 
-const LEGACY_EXAMS = AVAILABLE_EXAMS.filter((e) => {
-  const year = Number.parseInt(e.id.slice(0, 4), 10)
-  return year <= 2019
-})
-const MODERN_EXAMS = AVAILABLE_EXAMS.filter((e) => {
-  const year = Number.parseInt(e.id.slice(0, 4), 10)
-  return year >= 2020
-})
+const isPmExam = (id: string) => id.includes("_FE_PM")
+const yearOf = (id: string) => Number.parseInt(id.slice(0, 4), 10)
 
-function durationForCount(count: number): number {
-  return count === 80 ? 150 : 90
-}
+const LEGACY_EXAMS = AVAILABLE_EXAMS.filter(
+  (e) => !isPmExam(e.id) && yearOf(e.id) <= 2019
+)
+const MODERN_AM_EXAMS = AVAILABLE_EXAMS.filter(
+  (e) => !isPmExam(e.id) && yearOf(e.id) >= 2020
+)
+const MODERN_PM_EXAMS = AVAILABLE_EXAMS.filter((e) => isPmExam(e.id))
 
 export function ExamSetup() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [paperId, setPaperId] = useState<string>(BLUEPRINT_VALUE)
+  const [track, setTrack] = useState<Track>("AM")
+  const [amPaperId, setAmPaperId] = useState<string>(BLUEPRINT_VALUE)
+  const [pmPaperId, setPmPaperId] = useState<string>(
+    () => MODERN_PM_EXAMS[0]?.id ?? ""
+  )
+  const paperId = track === "AM" ? amPaperId : pmPaperId
+  const setPaperId = track === "AM" ? setAmPaperId : setPmPaperId
 
   const selection = useMemo(() => {
-    if (paperId === BLUEPRINT_VALUE) {
+    if (track === "AM" && paperId === BLUEPRINT_VALUE) {
       return {
         kind: "blueprint" as const,
         count: BLUEPRINT_QUESTION_COUNT,
@@ -70,11 +75,12 @@ export function ExamSetup() {
     return {
       kind: "paper" as const,
       count: paper.questionCount,
-      duration: durationForCount(paper.questionCount),
+      duration: paperDurationMinutes(paper.id, paper.questionCount),
       coverage: `Full paper · ${paper.questionCount} questions in original order`,
       label: paper.label,
+      tier: paper.tier,
     }
-  }, [paperId])
+  }, [paperId, track])
 
   const start = () => {
     startTransition(() => {
@@ -88,6 +94,16 @@ export function ExamSetup() {
 
   return (
     <div className="space-y-5">
+      <TrackTabs
+        value={track}
+        onChange={setTrack}
+        ariaLabel="Mock exam track"
+        tabs={[
+          { track: "AM" },
+          { track: "PM", disabled: MODERN_PM_EXAMS.length === 0 },
+        ]}
+      />
+
       <section aria-label="Paper selection" className="space-y-2">
         <div className="flex items-baseline justify-between gap-3">
           <label
@@ -97,7 +113,9 @@ export function ExamSetup() {
             Paper
           </label>
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground/70 uppercase">
-            {selection.kind === "paper" ? "Past paper" : "Blueprint"}
+            {selection.kind === "paper"
+              ? `${selection.tier} paper`
+              : "Blueprint"}
           </span>
         </div>
         <Select value={paperId} onValueChange={setPaperId}>
@@ -108,35 +126,48 @@ export function ExamSetup() {
             <SelectValue placeholder="Choose a paper" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={BLUEPRINT_VALUE}>
-              Blueprint mix — sampled from 2020+ papers
-            </SelectItem>
-            {MODERN_EXAMS.length > 0 ? (
+            {track === "AM" ? (
+              <>
+                <SelectItem value={BLUEPRINT_VALUE}>
+                  Blueprint mix — sampled from 2020+ papers
+                </SelectItem>
+                {MODERN_AM_EXAMS.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>2020–2025 · AM holdout</SelectLabel>
+                    {MODERN_AM_EXAMS.map((exam) => (
+                      <SelectItem key={exam.id} value={exam.id}>
+                        {exam.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+                {LEGACY_EXAMS.length > 0 ? (
+                  <SelectGroup>
+                    <SelectLabel>2007–2019 · legacy</SelectLabel>
+                    {LEGACY_EXAMS.map((exam) => (
+                      <SelectItem key={exam.id} value={exam.id}>
+                        {exam.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+              </>
+            ) : (
               <SelectGroup>
-                <SelectLabel>2020–2025 · holdout</SelectLabel>
-                {MODERN_EXAMS.map((exam) => (
+                <SelectLabel>2024–2025 · PM</SelectLabel>
+                {MODERN_PM_EXAMS.map((exam) => (
                   <SelectItem key={exam.id} value={exam.id}>
                     {exam.label}
                   </SelectItem>
                 ))}
               </SelectGroup>
-            ) : null}
-            {LEGACY_EXAMS.length > 0 ? (
-              <SelectGroup>
-                <SelectLabel>2007–2019 · legacy</SelectLabel>
-                {LEGACY_EXAMS.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ) : null}
+            )}
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Blueprint samples a synthetic 60Q paper from classified 2020+
-          questions. Pick a specific year to sit that paper verbatim — useful
-          for reserving newer papers as an unseen holdout.
+          {track === "AM"
+            ? "Blueprint samples a synthetic 60Q paper from classified 2020+ questions. Pick a specific year to sit that paper verbatim — useful for reserving newer papers as an unseen holdout."
+            : "PM papers (2024+) are standalone MCQ in the post-2023 format — 20 questions, 100-minute limit."}
         </p>
       </section>
 
@@ -172,7 +203,9 @@ export function ExamSetup() {
             label="Coverage"
             hint={
               selection.kind === "paper"
-                ? "Exact past paper — no topic shuffling."
+                ? selection.tier === "PM"
+                  ? "Exact PM paper — questions in original order."
+                  : "Exact past paper — no topic shuffling."
                 : "Topic mix mirrors a real PhilNITS FE AM paper."
             }
             detail={selection.coverage}

@@ -3,6 +3,7 @@ import { getAvailableExams } from "@/lib/questions"
 export function ExamBankStatus() {
   const exams = getAvailableExams()
   const totalQuestions = exams.reduce((sum, e) => sum + e.questionCount, 0)
+  const pmExams = exams.filter((e) => e.tier === "PM")
 
   return (
     <section
@@ -18,13 +19,39 @@ export function ExamBankStatus() {
           questions
         </p>
       </div>
-      <p className="mt-2 text-sm text-foreground">
-        All FE AM papers from 2007–2025, Spring and Autumn.
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Only 2020–2025 are classified by topic; earlier years are available as
-        uncategorized.
-      </p>
+      <ul className="mt-2 space-y-2" role="list">
+        <li className="flex gap-2">
+          <span
+            aria-hidden
+            className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground/60"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-foreground">
+              All FE AM papers from 2007–2025, Spring and Autumn.
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Only 2020–2025 are classified by topic; earlier years are
+              available as uncategorized.
+            </p>
+          </div>
+        </li>
+        {pmExams.length > 0 ? (
+          <li className="flex gap-2">
+            <span
+              aria-hidden
+              className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground/60"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-foreground">
+                FE PM 2024–2025 ({pmExams.length} papers).
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Standalone MCQ in the post-2023 PM format.
+              </p>
+            </div>
+          </li>
+        ) : null}
+      </ul>
     </section>
   )
 }

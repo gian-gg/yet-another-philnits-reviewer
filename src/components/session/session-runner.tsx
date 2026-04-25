@@ -36,7 +36,12 @@ import {
 } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { TOPICS, type TopicId } from "@/lib/topics"
-import { CHOICE_IDS, type ChoiceId, type Question } from "@/lib/questions"
+import {
+  CHOICE_IDS,
+  choiceCountFor,
+  type ChoiceId,
+  type Question,
+} from "@/lib/questions"
 import { copyImageToClipboard } from "@/lib/copy-image"
 import { resolveImageUrl } from "@/lib/image"
 
@@ -239,10 +244,18 @@ export function SessionRunner({
         return
       }
       const key = e.key.toLowerCase()
-      if (key === "a" || key === "1") selectChoice("a")
-      else if (key === "b" || key === "2") selectChoice("b")
-      else if (key === "c" || key === "3") selectChoice("c")
-      else if (key === "d" || key === "4") selectChoice("d")
+      const choiceCount = current ? choiceCountFor(current) : 4
+      const numericIndex = Number.parseInt(key, 10)
+      if (
+        Number.isFinite(numericIndex) &&
+        numericIndex >= 1 &&
+        numericIndex <= choiceCount
+      ) {
+        selectChoice(CHOICE_IDS[numericIndex - 1])
+      } else if (key === "a") selectChoice("a")
+      else if (key === "b") selectChoice("b")
+      else if (key === "c") selectChoice("c")
+      else if (key === "d") selectChoice("d")
       else if (key === "arrowleft" || key === "[") goPrev()
       else if (key === "arrowright" || key === "]" || key === "enter") goNext()
       else if (key === "f") toggleFlag()
@@ -251,7 +264,15 @@ export function SessionRunner({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [selectChoice, goPrev, goNext, toggleFlag, revealCurrent, isFinished])
+  }, [
+    selectChoice,
+    goPrev,
+    goNext,
+    toggleFlag,
+    revealCurrent,
+    isFinished,
+    current,
+  ])
 
   if (isFinished) {
     return (
@@ -454,10 +475,15 @@ export function SessionRunner({
             />
 
             <ul
-              className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4"
+              className={cn(
+                "mt-6 grid gap-2",
+                choiceCountFor(current) === 8
+                  ? "grid-cols-4 sm:grid-cols-8"
+                  : "grid-cols-2 sm:grid-cols-4"
+              )}
               role="list"
             >
-              {CHOICE_IDS.map((choiceId) => {
+              {CHOICE_IDS.slice(0, choiceCountFor(current)).map((choiceId) => {
                 const isChosen = chosen === choiceId
                 const isAnswer = current.answer === choiceId
                 const showAsCorrect = isRevealed && isAnswer
@@ -831,7 +857,8 @@ function formatTime(ms: number): string {
 }
 
 function buildAskAiPrompt(q: Question): string {
-  return `Attached is a multiple-choice question (choices a, b, c, d). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
+  const lastChoice = CHOICE_IDS[choiceCountFor(q) - 1]
+  return `Attached is a multiple-choice question (choices a–${lastChoice}). The correct answer is ${q.answer.toUpperCase()}. Explain why that's the right choice, walk me through the reasoning, and briefly explain why each other option is wrong.
 
 (ref: ${q.id})`
 }

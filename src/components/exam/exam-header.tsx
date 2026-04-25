@@ -16,7 +16,7 @@ export function ExamHeader() {
           simulate-the-real-thing
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
-          60 questions, 90-minute timer, scored at the end.
+          Sit a full AM or PM paper under timed conditions, scored at the end.
         </p>
       </div>
     </header>

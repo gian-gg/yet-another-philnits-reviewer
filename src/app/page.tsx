@@ -47,7 +47,7 @@ export default function Page() {
       >
         <p className="inline-flex max-w-full items-center gap-1.5 font-mono">
           <span className="truncate">
-            mock exam can now sit any past paper verbatim
+            FE PM 2024–2025 papers added to practice and mock exam
           </span>
         </p>
       </aside>
