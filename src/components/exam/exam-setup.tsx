@@ -23,6 +23,9 @@ import { TrackTabs, type Track } from "@/components/track-tabs"
 import { getAvailableExams, paperDurationMinutes } from "@/lib/questions"
 
 const BLUEPRINT_VALUE = "blueprint"
+const PM_RANDOM_VALUE = "pm-random"
+const PM_RANDOM_COUNT = 20
+const PM_RANDOM_DURATION_MINUTES = 100
 const BLUEPRINT_QUESTION_COUNT = FE_AM_BLUEPRINT_TOTAL
 const BLUEPRINT_DURATION_MINUTES = 90
 const BLUEPRINT_ROWS = blueprintByCategory(FE_AM_BLUEPRINT)
@@ -48,8 +51,8 @@ export function ExamSetup() {
   const [isPending, startTransition] = useTransition()
   const [track, setTrack] = useState<Track>("AM")
   const [amPaperId, setAmPaperId] = useState<string>(BLUEPRINT_VALUE)
-  const [pmPaperId, setPmPaperId] = useState<string>(
-    () => MODERN_PM_EXAMS[0]?.id ?? ""
+  const [pmPaperId, setPmPaperId] = useState<string>(() =>
+    MODERN_PM_EXAMS.length > 0 ? PM_RANDOM_VALUE : ""
   )
   const paperId = track === "AM" ? amPaperId : pmPaperId
   const setPaperId = track === "AM" ? setAmPaperId : setPmPaperId
@@ -61,6 +64,14 @@ export function ExamSetup() {
         count: BLUEPRINT_QUESTION_COUNT,
         duration: BLUEPRINT_DURATION_MINUTES,
         coverage: BLUEPRINT_COVERAGE,
+      }
+    }
+    if (track === "PM" && paperId === PM_RANDOM_VALUE) {
+      return {
+        kind: "pm-random" as const,
+        count: PM_RANDOM_COUNT,
+        duration: PM_RANDOM_DURATION_MINUTES,
+        coverage: `${PM_RANDOM_COUNT} questions sampled across ${MODERN_PM_EXAMS.length} PM papers`,
       }
     }
     const paper = AVAILABLE_EXAMS.find((e) => e.id === paperId)
@@ -86,6 +97,8 @@ export function ExamSetup() {
     startTransition(() => {
       if (selection.kind === "paper") {
         router.push(`/exam/session?exam=${encodeURIComponent(paperId)}`)
+      } else if (selection.kind === "pm-random") {
+        router.push("/exam/session?track=PM")
       } else {
         router.push("/exam/session")
       }
@@ -115,7 +128,9 @@ export function ExamSetup() {
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground/70 uppercase">
             {selection.kind === "paper"
               ? `${selection.tier} paper`
-              : "Blueprint"}
+              : selection.kind === "pm-random"
+                ? "PM randomized"
+                : "Blueprint"}
           </span>
         </div>
         <Select value={paperId} onValueChange={setPaperId}>
@@ -153,28 +168,37 @@ export function ExamSetup() {
                 ) : null}
               </>
             ) : (
-              <SelectGroup>
-                <SelectLabel>2024–2025 · PM</SelectLabel>
-                {MODERN_PM_EXAMS.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
+              <>
+                <SelectItem value={PM_RANDOM_VALUE}>
+                  Randomized — sampled across PM 2024–2025
+                </SelectItem>
+                <SelectGroup>
+                  <SelectLabel>2024–2025 · PM</SelectLabel>
+                  {MODERN_PM_EXAMS.map((exam) => (
+                    <SelectItem key={exam.id} value={exam.id}>
+                      {exam.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </>
             )}
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
           {track === "AM"
             ? "Blueprint samples a synthetic 60Q paper from classified 2020+ questions. Pick a specific year to sit that paper verbatim — useful for reserving newer papers as an unseen holdout."
-            : "PM papers (2024+) are standalone MCQ in the post-2023 format — 20 questions, 100-minute limit."}
+            : "PM papers (2024+) are standalone MCQ in the post-2023 format — 20 questions, 100-minute limit. Pick a year to sit it verbatim, or Randomized for a fresh 20Q draw across all PM papers."}
         </p>
       </section>
 
       <section aria-label="Exam summary" className="rounded-lg border bg-card">
         <div className="flex items-center gap-3 border-b px-4 py-3">
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-            {selection.kind === "paper" ? selection.label : "Mock Exam"}
+            {selection.kind === "paper"
+              ? selection.label
+              : selection.kind === "pm-random"
+                ? "PM Randomized"
+                : "Mock Exam"}
           </span>
           <span className="ml-auto font-mono text-[11px] text-muted-foreground tabular-nums">
             {selection.count}Q · {selection.duration}m
@@ -189,7 +213,9 @@ export function ExamSetup() {
             hint={
               selection.kind === "paper"
                 ? "Administered in the paper's original order."
-                : "Fixed count — matches a full mock run."
+                : selection.kind === "pm-random"
+                  ? "Sampled across all PM 2024–2025 papers."
+                  : "Fixed count — matches a full mock run."
             }
           />
           <FactRow
@@ -206,7 +232,9 @@ export function ExamSetup() {
                 ? selection.tier === "PM"
                   ? "Exact PM paper — questions in original order."
                   : "Exact past paper — no topic shuffling."
-                : "Topic mix mirrors a real PhilNITS FE AM paper."
+                : selection.kind === "pm-random"
+                  ? "Random draw from the full PM bank, no per-paper bias."
+                  : "Topic mix mirrors a real PhilNITS FE AM paper."
             }
             detail={selection.coverage}
           />
@@ -265,7 +293,9 @@ export function ExamSetup() {
             <span className="hidden sm:inline">
               {selection.kind === "paper"
                 ? `Sitting ${selection.label}. Timer starts on Start.`
-                : "Ready when you are. Timer starts on Start."}
+                : selection.kind === "pm-random"
+                  ? "Sitting a random PM draw. Timer starts on Start."
+                  : "Ready when you are. Timer starts on Start."}
             </span>
           </p>
 
