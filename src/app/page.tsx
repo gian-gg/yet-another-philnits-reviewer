@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 import { ExamBankStatus } from "@/components/landing/exam-bank-status"
 import { LandingHero } from "@/components/landing/landing-hero"
@@ -46,9 +47,14 @@ export default function Page() {
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
       >
         <p className="inline-flex max-w-full items-center gap-1.5 font-mono">
-          <span className="truncate">
+          <Link
+            href="https://github.com/gian-gg/yet-another-philnits-reviewer"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="truncate underline-offset-4 hover:text-foreground hover:underline"
+          >
             FE PM 2024–2025 papers added to practice and mock exam
-          </span>
+          </Link>
         </p>
       </aside>
     </main>
